@@ -9,6 +9,7 @@ const db = knex({
   }
 })
 
+await db.schema.dropTable('messages')
 await db.schema.createTable('messages', t => {
   t.increments('id').primary()
   t.text('txt')

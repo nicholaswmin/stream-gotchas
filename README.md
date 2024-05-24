@@ -1,9 +1,9 @@
 [![test-workflow][test-workflow-badge]][ci-test]
 
 # stream-repro
-Streaming query repro case
+[Streaming query][streams] over HTTP repro case
 
-## Run
+## Install
 
 git clone, then:
 
@@ -15,16 +15,23 @@ npm i
 export DATABASE_URL=postgres://postgres@localhost:5432/repro
 
 # create a 1-table DB with sample data
-npm run initdb
-
-# run
-npm start
+npm run setupdb
 ```
+
+Run the test cases:
 
 ## Test
 
 ```bash
 npm test
+```
+
+## Run server
+
+There's no point but:
+
+```bash
+npm start
 ```
 
 ## Env info
@@ -44,4 +51,5 @@ MIT License, 2024
 
 [test-workflow-badge]: https://github.com/nicholaswmin/stream-repro/actions/workflows/tests.yml/badge.svg
 [ci-test]: https://github.com/nicholaswmin/stream-repro/actions/workflows/tests.yml
+[streams]: https://nodejs.org/api/stream.html#readable-streams
 [nicholaswmin]: https://github.com/nicholaswmin
