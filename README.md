@@ -28,7 +28,8 @@ npm test
 
 ## Run server
 
-There's no point but:
+Not much point in this but you can view the streams
+in the browser itself
 
 ```bash
 npm start
