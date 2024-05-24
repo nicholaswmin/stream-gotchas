@@ -11,11 +11,11 @@ git clone, then:
 # install
 npm i
 
-# set to a running Postgres server
-export DATABASE_URL=postgres://postgres@localhost:5432/repro
+# spin up a PG server, then export it as DATABASE_URL
+export DATABASE_URL=postgres://postgres:123@localhost:5432/repro
 
 # create a 1-table DB with sample data
-npm run setupdb
+npm run initdb
 ```
 
 Run the test cases:

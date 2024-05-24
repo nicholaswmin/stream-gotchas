@@ -5,9 +5,13 @@
   "type": "module",
   "scripts": {
     "start": "node app.js",
-    "test": "npm run setupdb && npx mocha test --exit --colors",
-    "setupdb": "npm run createdb && node setup.js",
-    "createdb": "dropdb ${DATABASE_URL}; createdb ${DATABASE_URL};"
+    "test": "npm run initdb && npx mocha test/test.spec.js",
+    "initdb": "node initdb.js"
+  },
+  "mocha": {
+    "exit": true,
+    "colors": true,
+    "check-leaks": true
   },
   "engines": {
     "npm": "10.x",
