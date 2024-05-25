@@ -59,5 +59,5 @@ describe('GET /uncompressed', function() {
       })
   })
 
-  shared.sendsParsableData()
+  shared.it.sends25KMessages()
 })
