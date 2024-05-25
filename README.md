@@ -15,6 +15,7 @@ npm i
 export DATABASE_URL=postgres://postgres:123@localhost:5432/repro
 
 # create a 1-table DB with sample data
+# ~ 25k events, ~1MB total
 npm run initdb
 ```
 

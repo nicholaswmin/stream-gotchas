@@ -4,7 +4,7 @@ import chai from 'chai'
 import chaiHttp from 'chai-http'
 import binaryParser from 'superagent-binary-parser'
 
-import chaiHttpRaw from './chai-http-raw/index.js'
+import chaiHttpRaw from './utils/chai-http-raw/index.js'
 import app from '../app.js'
 
 chai.should()
