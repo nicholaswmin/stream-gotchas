@@ -5,7 +5,6 @@ const name = DATABASE_URL.split('/')[3]
 const isLocalDB = DATABASE_URL.includes('@localhost')
 const adminURL = DATABASE_URL.replace(name, '')
 const userURL = DATABASE_URL
-const sslOpts = isLocalDB ? false : { rejectUnauthorized: false }
 
 if (isLocalDB) {
   const admin = knex({
