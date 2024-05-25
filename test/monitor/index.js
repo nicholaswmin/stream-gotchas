@@ -138,27 +138,31 @@ export default class Monitor {
   }
 
   report(opts) {
-    this.end()._printReportTitle(this.name)
+    this._printTitle('Report: ' + this.name).end()
 
-    this.logs.sort((a, b) => a.index - b.index)
+    this.logs
       .filter(log => opts?.filter ? !opts.filter.includes(log.event) : true)
+      .sort((a, b) => a.index - b.index)
+      .map((log, i) => ({ ...log, index: i + 1 }))
       .forEach(this._printLog())
   }
 
   reportGroups(opts) {
-    this.end()._printReportTitle(this.name)
+    this._printTitle(this.name).end()
+
+    const logs = this.logs
+      .filter(log => opts?.filter ? !opts.filter.includes(log.event) : true)
+      .sort((a, b) => a.index - b.index)
+      .map((log, i) => ({ ...log, index: i + 1 }))
 
     this.streams.map(stream => {
       return {
         ...stream,
-        logs: this.logs
-          .filter(log => log.id === stream.id)
-          .filter(log => opts?.filter ? !opts.filter.includes(log.event) : true)
-          .sort((a, b) => a.index - b.index)
+        logs: logs.filter(log => log.id === stream.id)
       }
     })
     .forEach(stream => {
-      this._printStreamTitle(stream.name)
+        this._printTitle(stream.name)
 
         stream.logs.forEach(this._printLog({ skipName: true }))
       })
@@ -171,14 +175,10 @@ export default class Monitor {
       console.log(style('orange', '%s emitted after report generation'), event)
   }
 
-  _printReportTitle(title) {
-    console.log('\n \n', col(['bold', 'magenta'], `Report: ${title}`), '\n')
+  _printTitle(text) {
+    console.log('\n', col(['bold', 'magenta'], text), '\n')
 
     return this
-  }
-
-  _printStreamTitle(title) {
-    console.log('\n', col(['magenta'], title), '\n')
   }
 
   _printLog(opts) {
