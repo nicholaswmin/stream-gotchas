@@ -9,7 +9,16 @@ chai.use(chaiHttp)
 
 export default {
   it: {
-    addsChunkedHeaders: url => {
+    status200: url => {
+      it('responds with status=200', async function () {
+        const res = await chai.request(app)
+          .get(url)
+
+        res.status.should.equal(200)
+      })
+    },
+
+    chunkedHeaders: url => {
       it('marks response as chunked', async function () {
         const res = await chai.request(app)
           .get(url)

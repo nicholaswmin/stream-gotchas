@@ -16,14 +16,8 @@ chai.use(chaiHttpRaw)
 describe('GET /gzipped', function() {
   const url = '/gzipped'
 
-  it('responds with status=200', async function () {
-    const res = await chai.request(app)
-      .get(url)
-
-    res.status.should.equal(200)
-  })
-
-  shared.it.addsChunkedHeaders(url)
+  shared.it.status200(url)
+  shared.it.chunkedHeaders(url)
 
   describe('client accepts compressed responses', function() {
     it('marks response as compressed', async function () {
