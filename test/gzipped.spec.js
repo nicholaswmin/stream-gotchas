@@ -19,21 +19,12 @@ describe('GET /gzipped', function() {
     res.status.should.equal(200)
   })
 
-  describe('Has correct headers', () => {
-    it('has Transfer-Encoding : chunked', async function () {
-      const res = await chai.request(app)
-        .get('/uncompressed')
+  it('sets Transfer-Encoding and Content-Encoding headers', async function () {
+    const res = await chai.request(app)
+      .get('/gzipped')
 
-      res.should.have.header('Transfer-Encoding' , 'chunked')
-    })
-
-    it('has Content-Encoding : gzip', async function () {
-      const res = await chai.request(app)
-        .get('/uncompressed')
-
-      res.headers.should.not.include.property('Content-Encoding')
-      res.headers.should.not.include.property('content-encoding')
-    })
+    res.should.have.header('Transfer-Encoding' , 'chunked')
+    res.should.have.header('Content-Encoding', 'gzip')
   })
 
   it('sends ~ 60 KB of data', function () {

@@ -19,19 +19,18 @@ describe('GET /uncompressed', function() {
     res.status.should.equal(200)
   })
 
-  describe('Has correct headers', () => {
-    it('has Transfer-Encoding : chunked', async function () {
-      const res = await chai.request(app).get(url)
+  it('sets Transfer-Encoding header', async function () {
+    const res = await chai.request(app)
+      .get('/uncompressed')
 
-      res.should.have.header('Transfer-Encoding' , 'chunked')
-    })
+    res.should.have.header('Transfer-Encoding' , 'chunked')
+  })
 
-    it('does not have compression headers', async function () {
-      const res = await chai.request(app).get(url)
+  it('does not set a Content-Encoding header', async function () {
+    const res = await chai.request(app)
+      .get('/uncompressed')
 
-      res.headers.should.not.include.property('Content-Encoding')
-      res.headers.should.not.include.property('content-encoding')
-    })
+    res.should.not.have.header('Content-Encoding')
   })
 
   it('sends ~ 1000 KB of data', function () {
