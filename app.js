@@ -1,5 +1,6 @@
 import zlib from 'node:zlib'
 import express from 'express'
+import listroutes from 'express-list-routes'
 import JSONStream from 'JSONStream'
 import knex from 'knex'
 

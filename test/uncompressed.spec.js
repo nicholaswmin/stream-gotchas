@@ -42,7 +42,7 @@ describe('GET /uncompressed', function() {
       },
       transform(chunk, encoding, callback) {
         callback()
-        this.bytes += Buffer.byteLength(chunk)
+        this.bytes += chunk.length
       },
       final(callback) {
         callback()
