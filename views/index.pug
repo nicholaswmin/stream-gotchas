@@ -1,0 +1,8 @@
+extends layout.pug
+
+block content
+  h2='Stream Cases'
+  ul
+  each route in routes
+    li
+      a(href=route.path) #{route.path}

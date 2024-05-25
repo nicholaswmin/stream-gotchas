@@ -28,7 +28,8 @@ npm test
 
 ## Run server
 
-There's no point but:
+Not much point in this but you can view the streams
+in the browser itself
 
 ```bash
 npm start
@@ -42,6 +43,10 @@ MacOS Sonoma @M2 24GB Air
 Node: v22.0.0
 Chrome: v124.0.6  
 ```
+
+## Notes
+
+- https://stackoverflow.com/questions/41155877/node-js-passthrough-stream-not-closing-properly
 
 ## Authors
 
