@@ -1,7 +1,6 @@
 import { pipeline } from 'node:stream/promises'
 import chai from 'chai'
 import chaiHttp from 'chai-http'
-import binaryParser from 'superagent-binary-parser'
 
 import chaiHttpRaw from './utils/chai-http-raw/index.js'
 import byteCounter from './utils/byte-counter/index.js'
