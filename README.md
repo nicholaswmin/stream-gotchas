@@ -1,7 +1,7 @@
 [![test-workflow][test-workflow-badge]][ci-test]
 
 # stream-repro
-[Streaming query][streams] over HTTP repro case
+List of failure cases when [streaming][streams] over HTTP
 
 ## Install
 
