@@ -9,10 +9,19 @@ chai.use(chaiHttp)
 
 export default {
   it: {
-    sends25KMessages: () => {
+    addsChunkedHeaders: url => {
+      it('marks response as chunked', async function () {
+        const res = await chai.request(app)
+          .get(url)
+
+        res.should.have.header('Transfer-Encoding' , 'chunked')
+      })
+    },
+
+    sends25KMessages: url => {
       it('sends data that parses to 25000 messages', async function () {
         const messages = await chai.request(app)
-          .get('/uncompressed')
+          .get(url)
           .parse(binaryParser).buffer()
           .then(res => JSON.parse((new TextDecoder('UTF-8'))
           .decode(res.body)))

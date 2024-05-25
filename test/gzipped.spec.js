@@ -22,12 +22,7 @@ describe('GET /gzipped', function() {
     res.status.should.equal(200)
   })
 
-  it('marks response as chunked', async function () {
-    const res = await chai.request(app)
-      .get(url)
-
-    res.should.have.header('Transfer-Encoding' , 'chunked')
-  })
+  shared.it.addsChunkedHeaders(url)
 
   describe('client accepts compressed responses', function() {
     it('marks response as compressed', async function () {
@@ -62,7 +57,7 @@ describe('GET /gzipped', function() {
         })
     })
 
-    shared.it.sends25KMessages()
+    shared.it.sends25KMessages(url)
   })
 
   // @TODO Not implemented
@@ -74,6 +69,6 @@ describe('GET /gzipped', function() {
       res.should.not.have.header('Content-Encoding')
     })
 
-    // inc. shared.it.sends25KMessages() // @TODO
+    // inc. shared.it.sends25KMessages(url) // @TODO
   })
 })

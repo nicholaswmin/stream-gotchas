@@ -20,16 +20,10 @@ describe('GET /uncompressed', function() {
     res.status.should.equal(200)
   })
 
-  it('marks response as chunked', async function () {
-    const res = await chai.request(app)
-      .get('/uncompressed')
-
-    res.should.have.header('Transfer-Encoding' , 'chunked')
-  })
+  shared.it.addsChunkedHeaders(url)
 
   it('marks response as uncompressed', async function () {
-    const res = await chai.request(app)
-      .get('/uncompressed')
+    const res = await chai.request(app).get(url)
 
     res.should.not.have.header('Content-Encoding')
   })
@@ -59,5 +53,5 @@ describe('GET /uncompressed', function() {
       })
   })
 
-  shared.it.sends25KMessages()
+  shared.it.sends25KMessages(url)
 })
