@@ -72,7 +72,8 @@ describe('GET /gzipped', function() {
     })
   })
 
-  // @TODO Not implemented
+  // @TODO use https://github.com/mochajs/mocha/wiki/Shared-Behaviours
+  // and include it in both accepts/notaccepts compressed res.
   it.skip('sends data that parses to 25000 messages', async function () {
     const messages = await chai.request(app)
       .get('/uncompressed')
