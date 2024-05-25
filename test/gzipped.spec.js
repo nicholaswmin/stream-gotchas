@@ -61,7 +61,7 @@ describe('GET /gzipped', function() {
   })
 
   // @TODO Not implemented
-  describe.skip('when client does not accept compressed responses', function() {
+  describe.skip('client does not accept compressed responses', function() {
     // @TODO Not implemented
     it.skip('marks the response as uncompressed', async function () {
       const res = await chai.request(app).get(url)
