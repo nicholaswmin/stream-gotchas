@@ -5,6 +5,7 @@ import chaiHttp from 'chai-http'
 import binaryParser from 'superagent-binary-parser'
 
 import chaiHttpRaw from './utils/chai-http-raw/index.js'
+import shared from './shared.specs.js'
 import app from '../app.js'
 
 chai.should()
@@ -58,13 +59,5 @@ describe('GET /uncompressed', function() {
       })
   })
 
-  it('sends data that parses to 25000 messages', async function () {
-    const messages = await chai.request(app)
-      .get(url)
-      .parse(binaryParser).buffer()
-      .then(res => JSON.parse((new TextDecoder('UTF-8'))
-      .decode(res.body)))
-
-    messages.should.be.an('Array').with.length(25000)
-  })
+  shared.sendsParsableData()
 })
