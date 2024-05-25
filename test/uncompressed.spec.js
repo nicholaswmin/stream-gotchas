@@ -19,14 +19,14 @@ describe('GET /uncompressed', function() {
     res.status.should.equal(200)
   })
 
-  it('sets Transfer-Encoding header', async function () {
+  it('marks response as chunked', async function () {
     const res = await chai.request(app)
       .get('/uncompressed')
 
     res.should.have.header('Transfer-Encoding' , 'chunked')
   })
 
-  it('does not set a Content-Encoding header', async function () {
+  it('marks response as uncompressed', async function () {
     const res = await chai.request(app)
       .get('/uncompressed')
 

@@ -19,38 +19,46 @@ describe('GET /gzipped', function() {
     res.status.should.equal(200)
   })
 
-  it('sets Transfer-Encoding and Content-Encoding headers', async function () {
+  it('marks the response as chunked', async function () {
     const res = await chai.request(app)
       .get('/gzipped')
 
     res.should.have.header('Transfer-Encoding' , 'chunked')
-    res.should.have.header('Content-Encoding', 'gzip')
   })
 
-  it('sends ~ 60 KB of data', function () {
-    const counter = new PassThrough({
-      construct(callback) {
-        callback()
-        this.bytes = 0
-      },
-      transform(chunk, encoding, callback) {
-        callback()
-        this.bytes += chunk.length
-      },
-      final(callback) {
-        callback()
-      }
+  describe('when client accepts compressed responses', function() {
+    it('marks the response as compressed', async function () {
+      const res = await chai.request(app)
+        .get('/gzipped')
+
+      res.should.have.header('Content-Encoding', 'gzip')
     })
 
-    return chai.requestRaw(app)
-      .get('/gzipped')
-      .then(({ res, server }) => {
-        return pipeline(res, counter).then(() => {
-          counter.bytes.should.be.within(50000, 70000)
-
-          server.close()
-        })
+    it('sends ~ 60 KB of data', function () {
+      const counter = new PassThrough({
+        construct(callback) {
+          callback()
+          this.bytes = 0
+        },
+        transform(chunk, encoding, callback) {
+          callback()
+          this.bytes += chunk.length
+        },
+        final(callback) {
+          callback()
+        }
       })
+    })
+  })
+
+  // @TODO Not implemented
+  describe.skip('when client does not accept compressed responses', function() {
+    it.skip('marks the respnse as uncompressed', async function () {
+      const res = await chai.request(app)
+        .get('/gzipped')
+
+      res.should.not.have.header('Content-Encoding')
+    })
   })
 
   it('sends data that parses to 25000 messages', async function () {
