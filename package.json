@@ -5,13 +5,15 @@
   "type": "module",
   "scripts": {
     "start": "node app.js",
-    "test": "npm run initdb && npx mocha test/test.spec.js",
+    "test": "npm run initdb && npx mocha test/**.spec.js",
     "initdb": "node initdb.js"
   },
   "mocha": {
     "exit": true,
-    "colors": true,
-    "check-leaks": true
+    "bail": true,
+    "check-leaks": true,
+    "slow": 6000,
+    "colors": true
   },
   "engines": {
     "npm": "10.x",

@@ -34,7 +34,8 @@ await user.schema.createTable('messages', t => {
   t.increments('id_message').primary()
   t.text('text')
 })
-await user.batchInsert('messages', Array(100).fill({ text: 'hello world' }))
+// 25000 * `{ text: 'foo bar' }` totals 1 MB; this is tested in tests
+await user.batchInsert('messages', Array(25000).fill({ text: 'foo bar' }))
 await user.destroy()
 
 console.log('Done! DB ready')
