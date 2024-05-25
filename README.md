@@ -18,9 +18,9 @@ export DATABASE_URL=postgres://postgres:123@localhost:5432/repro
 npm run initdb
 ```
 
-Run the test cases:
-
 ## Test
+
+Run the test cases:
 
 ```bash
 npm test
