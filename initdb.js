@@ -34,8 +34,10 @@ await user.schema.createTable('messages', t => {
   t.increments('id_message').primary()
   t.text('text')
 })
-// 25000 * `{ text: 'foo bar' }` totals 1 MB; this is tested in tests
-await user.batchInsert('messages', Array(25000).fill({ text: 'foo bar' }))
+// 25000 * `{ text: '7306668' }` totals 1 MB; this is tested in tests
+await user.batchInsert('messages', Array(25000).fill({
+  text: Math.random().toString().substring(2,9)
+}))
 await user.destroy()
 
 console.log('Done! DB ready')
