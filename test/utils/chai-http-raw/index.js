@@ -1,5 +1,3 @@
-import http from 'node:http'
-
 /*
 # chai-http-raw
 
@@ -24,6 +22,8 @@ chai.requestRaw(app)
   })
 ```
 */
+
+import http from 'node:http'
 
 export default (chai, _) => {
   chai.requestRaw = app => ({

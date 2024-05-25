@@ -1,6 +1,3 @@
-import crypto from 'node:crypto'
-import { styleText as col } from 'node:util'
-
 /*
 # Stream Monitor
 
@@ -55,6 +52,9 @@ setTimeout(() => monitor.report({
 }), 4000)
 ```
 */
+
+import crypto from 'node:crypto'
+import { styleText as col } from 'node:util'
 
 export default class Monitor {
   constructor({name = 'Report', exclude = [] } = {}) {

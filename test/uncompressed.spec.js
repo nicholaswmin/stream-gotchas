@@ -1,12 +1,13 @@
 import { pipeline } from 'node:stream/promises'
-import { PassThrough } from 'node:stream'
 import chai from 'chai'
 import chaiHttp from 'chai-http'
 import binaryParser from 'superagent-binary-parser'
 
 import chaiHttpRaw from './utils/chai-http-raw/index.js'
-import shared from './shared.specs.js'
+import byteCounter from './utils/byte-counter/index.js'
 import app from '../app.js'
+
+import shared from './shared.specs.js'
 
 chai.should()
 chai.use(chaiHttp)
@@ -29,19 +30,7 @@ describe('GET /uncompressed', function() {
   })
 
   it('sends ~ 1000 KB of data', function () {
-    const counter = new PassThrough({
-      construct(callback) {
-        callback()
-        this.bytes = 0
-      },
-      transform(chunk, encoding, callback) {
-        callback()
-        this.bytes += chunk.length
-      },
-      final(callback) {
-        callback()
-      }
-    })
+    const counter = byteCounter()
 
     return chai.requestRaw(app).get(url)
       .then(({ res, server }) => {
