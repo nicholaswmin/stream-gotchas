@@ -40,7 +40,7 @@ describe('GET /gzipped', function() {
         })
     })
 
-    shared.it.sends25KMessages(url)
+    shared.it.sendsParseableData(url)
   })
 
   // @TODO Not implemented
@@ -52,6 +52,6 @@ describe('GET /gzipped', function() {
       res.should.not.have.header('Content-Encoding')
     })
 
-    // inc. shared.it.sends25KMessages(url) // @TODO
+    // inc. shared.it.sendsParseableData(url) // @TODO
   })
 })

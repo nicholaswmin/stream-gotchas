@@ -27,7 +27,7 @@ export default {
       })
     },
 
-    sends25KMessages: url => {
+    sendsParseableData: url => {
       it('sends data that parses to 25000 messages', async function () {
         const messages = await chai.request(app)
           .get(url)

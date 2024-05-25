@@ -37,5 +37,5 @@ describe('GET /uncompressed', function() {
       })
   })
 
-  shared.it.sends25KMessages(url)
+  shared.it.sendsParseableData(url)
 })
