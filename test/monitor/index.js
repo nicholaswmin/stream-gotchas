@@ -16,7 +16,10 @@ import Monitor from './index.js' // keep it terse
 
 // Instantiate a monitor
 
-const monitor = new Monitor('Test')
+const monitor = new Monitor({
+  name: 'Compresion', // name the report
+  exclude: ['pause', 'drain' ] // optional: ignore these
+})
 
 // Create/Acquire streams as usual
 
@@ -54,8 +57,9 @@ setTimeout(() => monitor.report({
 */
 
 export default class Monitor {
-  constructor(name = 'Report') {
+  constructor({name = 'Report', exclude = [] } = {}) {
     this.name = name
+    this.exclude = exclude
 
     this.streams = []
     this.logs = []
@@ -140,25 +144,16 @@ export default class Monitor {
   report(opts) {
     this._printTitle('Report: ' + this.name).end()
 
-    this.logs
-      .filter(log => opts?.filter ? !opts.filter.includes(log.event) : true)
-      .sort((a, b) => a.index - b.index)
-      .map((log, i) => ({ ...log, index: i + 1 }))
-      .forEach(this._printLog())
+    this._getLogs().forEach(this._printLog())
   }
 
   reportGroups(opts) {
     this._printTitle(this.name).end()
 
-    const logs = this.logs
-      .filter(log => opts?.filter ? !opts.filter.includes(log.event) : true)
-      .sort((a, b) => a.index - b.index)
-      .map((log, i) => ({ ...log, index: i + 1 }))
-
     this.streams.map(stream => {
       return {
         ...stream,
-        logs: logs.filter(log => log.id === stream.id)
+        logs: this._getLogs().filter(log => log.id === stream.id)
       }
     })
     .forEach(stream => {
@@ -173,6 +168,13 @@ export default class Monitor {
 
     if (this._ended)
       console.log(style('orange', '%s emitted after report generation'), event)
+  }
+
+  _getLogs() {
+    return this.logs
+      .filter(log => !this.exclude.includes(log.event))
+      .sort((a, b) => a.index - b.index)
+      .map((log, i) => ({ ...log, index: i + 1 }))
   }
 
   _printTitle(text) {
@@ -192,7 +194,7 @@ export default class Monitor {
 
       opts?.skipName ?
         console.log(format.index, format.event, format.err) :
-        console.log(format.index, format.event, format.name, format.err)
+        console.log(format.index, format.name, format.event, format.err)
     }
   }
 }
