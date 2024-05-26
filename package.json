@@ -4,7 +4,7 @@
   "description": "Reproduction test case of issues in http streams",
   "type": "module",
   "scripts": {
-    "start": "node app.js",
+    "start": "node --watch app.js",
     "test": "npm run initdb && npx mocha test/**.spec.js",
     "initdb": "node initdb.js"
   },

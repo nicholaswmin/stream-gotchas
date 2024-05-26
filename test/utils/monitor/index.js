@@ -9,13 +9,14 @@ affect stream flow behavior
 ## Usage
 
 ```js
-import Monitor from './index.js' // keep it terse
+import Monitor from './index.js'
 
 // Instantiate a monitor
 
 const monitor = new Monitor({
-  name: 'Compresion', // name the report
-  exclude: ['pause', 'drain' ] // optional: ignore these
+  title: 'Compresion Endpoint Test',
+   // optional: ignore noisy events
+  ignore: ['pause', 'drain' ]
 })
 
 // Create/Acquire streams as usual
@@ -24,11 +25,10 @@ const readable = new stream.Readable()
 const passthrough = new stream.PassThrough()
 const writeable = new stream.Writeable()
 
-// Add them to the monitor asap
-//  - optionally give them names for easy id later
+// Add them to the monitor asapr
 
 monitor
-  .add(readable, 'foo-stream')
+  .add(readable, 'foo-stream') // give name to each
   .add(passthrough, 'bar-stream')
   .add(writeable)
 
@@ -38,14 +38,14 @@ readable.pipe(passthrough).pipe(writeable)
 
 // Log their lifecycle and current state:
 
-// Report 1: All logs collated
+// Report 1: Reports each stream, grouped with its logs
 
 setTimeout(() => monitor.reportGroups({
   filter: ['drain', 'resume', 'pause'] // optional: exclude events
 }), 4000)
 
 // or ..
-// Report 2: Group logs per stream
+// Report 2: All logs from all streams 
 
 setTimeout(() => monitor.report({
   filter: ['drain', 'resume', 'pause'] // optional: exclude events
@@ -57,20 +57,35 @@ import crypto from 'node:crypto'
 import { styleText as col } from 'node:util'
 
 export default class Monitor {
-  constructor({name = 'Report', exclude = [] } = {}) {
-    this.name = name
-    this.exclude = exclude
-
+  constructor({ title = 'Report', ignore = [] } = {}) {
+    this.title = title
+    this.ignore = ignore
     this.streams = []
-    this.logs = []
 
     this._ended = false
     this._logCounter = 0
-    this._mappings = {
+
+    this._reportedProps = [
+      // readable
+      'readableFlowing',
+      'readableAborted',
+
+      // writeable
+      'writeableNeedDrain',
+      'writeableAborted',
+
+      // all
+      'aborted',
+      'destroyed',
+      'errored'
+    ]
+
+    this._colors = {
       // -- Events --
 
       // - Info
       '*': 'blue',
+      'monitored': 'cyan',
 
       // - Success
       'finish': 'green',
@@ -98,39 +113,75 @@ export default class Monitor {
   }
 
   add(stream, name) {
-    const id = crypto.randomUUID()
+    const self = this
+
+    stream.mnt = {}
+    stream.mnt.logs = []
+    stream.mnt.name = name
+    stream.log = function(event, err) {
+      this.mnt.logs.push({ index: ++self._logCounter, event, err })
+
+      if (self._ended)
+        console.warn(style('orange', 'WARNING: %s emitted after report'), event)
+    }
+
+    stream.getStyledProps = function() {
+      return self._reportedProps.reduce((acc, prop) => {
+        return this[prop] ?
+            acc.concat({ name: prop, value: stream[prop] }) :
+            acc
+      }, [])
+        .map(prop => {
+          const color = prop.value && self._colors[prop.name] ?
+            self._colors[prop.name] : self._colors['*']
+
+          return {
+            name: col(color, prop.name),
+            value: col(color, prop.value.toString())
+          }
+        })
+    }
+
+    stream.styleLog = function(log) {
+      return {
+        original_index: log.index,
+        original_src: this.mnt.name,
+        index: col('gray', log.index.toString()),
+        event: col(self._colors[log.event] || self._colors['*'], log.event),
+        src: this.mnt.name,
+        err: log.err ? log.err.message : ''
+      }
+    }
+
+    stream.getStyledLogs = function() {
+      return this.mnt.logs
+        .filter(log => !self.ignore.includes(log.event))
+        .map(this.styleLog.bind(this))
+    }
 
     if (stream._readableState) {
-      // Ignoring `readable`, `data` handlers which affect flow.
+      // Ignoring `readable` & `data` handlers which affect flow.
       stream
-        .on('close', () => this._log('close', id))
-        .on('end', () => this._log('close', id))
-        .on('error', err => this._log('error', id, err))
-        .on('pause', () => this._log('pause', id))
-        .on('resume', () => this._log('resume', id))
-        // readableFlowing
-        // readableAborted
-        // destroyed
-        // errored
+        .on('close', function() { this.log('close' )})
+        .on('end', function() { this.log('close' )})
+        .on('error', function(err) { this.log('error', err) })
+        .on('pause', function() { this.log('pause' )})
+        .on('resume', function() { this.log('resume' )})
     }
 
     if (stream._writableState) {
       stream
-        .on('close', () => this._log('close', id))
-        .on('drain', () => this._log('drain', id))
-        .on('error', err => this._log('error', id, err))
-        .on('finish', () => this._log('finish', id))
-        .on('pipe', () => this._log('pipe', id))
-        .on('unpipe', () => this._log('unpipe', id))
-        // writeableNeedDrain
-        // writeableAborted
-        // destroyed
-        // aborted
-        // errored
+        .on('close', function() { this.log('close' )})
+        .on('drain', function() { this.log('drain' )})
+        .on('error', function(err) { this.log('error', err )})
+        .on('finish', function() { this.log('finish' )})
+        .on('pipe', function() { this.log('pipe') })
+        .on('unpipe', function() { this.log('unpipe' )})
     }
 
-    this._log('monitored', id)
-    this.streams.push({ id, name })
+    stream.log('monitored')
+
+    this.streams.push(stream)
 
     return this
   }
@@ -141,60 +192,69 @@ export default class Monitor {
     return this
   }
 
-  report(opts) {
-    this._printTitle('Report: ' + this.name).end()
+  getCollatedReindexedLogs() {
+    return this.streams
+      .reduce((acc, stream) => acc.concat(stream.getStyledLogs()), [])
+      .sort((a, b) => a.original_index - b.original_index)
+      .map((log, i) => {
+        const iLen = 3 - i.toString().length
+        const pad = Array.from({ length: iLen }).fill(' ').join('')
 
-    this._getLogs().forEach(this._printLog())
-  }
-
-  reportGroups(opts) {
-    this._printTitle(this.name).end()
-
-    this.streams.map(stream => {
-      return {
-        ...stream,
-        logs: this._getLogs().filter(log => log.id === stream.id)
-      }
-    })
-    .forEach(stream => {
-        this._printTitle(stream.name)
-
-        stream.logs.forEach(this._printLog({ skipName: true }))
+        return { ...log, index: i + pad }
       })
   }
 
-  _log(event, id, err) {
-    this.logs.push({ index: ++this._logCounter, event, id, err })
+  report() {
+    this
+      ._printTitle('Report: ' + this.title)
+      ._print('------------')
 
-    if (this._ended)
-      console.log(style('orange', '%s emitted after report generation'), event)
+    this.getCollatedReindexedLogs()
+      .forEach(styled => {
+        console.log(styled.index, styled.src, styled.event, styled.err)
+      })
   }
 
-  _getLogs() {
-    return this.logs
-      .filter(log => !this.exclude.includes(log.event))
-      .sort((a, b) => a.index - b.index)
-      .map((log, i) => ({ ...log, index: i + 1 }))
+  reportGroups() {
+    this._printTitle('Report: ' + this.title)
+
+    const logs = this.getCollatedReindexedLogs()
+
+    this.streams.forEach(stream => {
+      this._printSubtitle(`Stream: ${stream.mnt.name}`)
+      ._print('-------')
+
+      stream
+        .getStyledProps()
+        .forEach(styled => {
+          console.log(styled.name, ':', styled.value)
+        })
+
+      this._print('--')
+
+      logs
+        .filter(log => log.original_src === stream.mnt.name)
+        .forEach(styled => {
+          console.log(styled.index, styled.event, styled.err)
+        })
+    })
   }
 
-  _printTitle(text) {
-    console.log('\n', col(['bold', 'magenta'], text), '\n')
+  _printTitle(t) {
+    console.log('\n')
+    console.log(col(['bold', 'magenta'], `${t}`))
 
     return this
   }
 
-  _printLog(opts) {
-    return log => {
-      const format = {
-        index: col('gray', log.index.toString()),
-        event: col(this._mappings[log.event] || this._mappings['*'], log.event),
-        name: this.streams.find(stream => stream.id === log.id).name,
-        err: log.err ? log.err.message : ''
-      }
+  _printSubtitle(t) {
+    console.log('\n')
+    console.log(col(['magenta'], `${t}`))
 
-      opts?.skipName ?
-        console.log(format.index, format.event, format.err) :
-        console.log(format.index, format.name, format.event, format.err)
-    }
+    return this
+  }
+
+  _print(t) {
+    console.log(t)
   }
 }
