@@ -44,14 +44,6 @@ export default class Memstat {
     return this
   }
 
-  getStats() {
-    return {
-      snapshots: [ ...this.snapshots ],
-      current: this.current,
-      uptrend: this.uptrend
-    }
-  }
-
   stop() {
     this.observer.disconnect()
 
@@ -62,6 +54,14 @@ export default class Memstat {
     return {
       stats: this.getStats(),
       plot: this.plot.generate({ colors: [] })
+    }
+  }
+
+  getStats() {
+    return {
+      snapshots: [ ...this.snapshots ],
+      current: this.current,
+      uptrend: this.uptrend
     }
   }
 }
