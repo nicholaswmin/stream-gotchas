@@ -46,9 +46,12 @@
     "pug": "^3.0.2"
   },
   "devDependencies": {
+    "asciichart": "^1.5.25",
     "chai": "^4.4.1",
     "chai-http": "^4.4.0",
     "mocha": "^10.4.0",
+    "single-line-log": "^1.1.2",
+    "strip-ansi": "^7.1.0",
     "superagent-binary-parser": "^1.0.1"
   },
   "overrides": {
