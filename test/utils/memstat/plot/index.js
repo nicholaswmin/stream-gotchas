@@ -1,7 +1,7 @@
 import asciichart from 'asciichart'
 import singleLineLog from 'single-line-log'
 
-import { logs, restoreIO }  from './no-stdio-err.js'
+import { suspendIO, restoreIO }  from './process-io.js'
 import plot from './plot.js'
 
 const bytesToMB = bytes => Math.ceil((bytes / 1024) / 1024)
@@ -28,7 +28,8 @@ const toMinimumEquidistant = minCount => (acc, point, i, arr) => {
 }
 
 export default class Plot {
-  constructor({ initial = 0 }) {
+  constructor({ initial = 0, watch }) {
+    this.watch = watch
     this.window = {
       width: process.stdout.columns - 20,
       height: process.stdout.rows - 10
@@ -37,21 +38,26 @@ export default class Plot {
     this.snapshots = []
     this.initial = bytesToMB(initial)
     this.current = 0
-    this.uptrend = false
+    this.leaks = false
+
+    if (this.watch)
+      suspendIO()
   }
 
-  update({ snapshots, current, uptrend }) {
+  update({ snapshots, current, leaks }) {
     this.snapshots = snapshots.map(bytesToMB).filter(areEqualConsecutive)
     this.current = bytesToMB(current)
-    this.uptrend = uptrend
+    this.leaks = leaks
 
-    singleLineLog.stdout(this.generate({ current, snapshots, uptrend }))
+    if (this.watch)
+      singleLineLog.stdout(this.generate({ current, snapshots, leaks }))
 
     return this
   }
 
   end() {
-    restoreIO()
+    if (this.watch)
+      restoreIO()
 
     return this
   }
@@ -63,7 +69,7 @@ export default class Plot {
 
     return plot(this.snapshots, {
       title: '-- Heap size following GC --',
-      sublabels: [ this.uptrend ? 'Uptrend detected' : 'No uptrend' ],
+      sublabels: [ this.leaks ? 'Possible Leakage' : 'No leakage' ],
       lineLabels: [ 'heap size' ],
       xLabel: 'GC Cycles: ' + this.snapshots.length,
       yLabels: [
@@ -77,7 +83,7 @@ export default class Plot {
       height: this.window.height - 10,
       width: this.window.width - 5,
       hideXLabel: true,
-      colors: [ this.uptrend ? asciichart.red : asciichart.green ],
+      colors: [ this.leaks ? asciichart.red : asciichart.green ],
       ...opts
     })
   }

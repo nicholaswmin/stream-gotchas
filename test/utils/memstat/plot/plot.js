@@ -1,3 +1,20 @@
+/*
+ * # ascii-plot
+ *
+ * Plots a chart in ascii, extension of asciichart  
+ * https://github.com/kroitor/asciichart
+ *
+ * ## Original Authors:
+ *
+ * Igor Kroitor (@kroitor)
+ *
+ * ### Extended by:
+ * - Alexander Klimetschek (@alexkli)
+ *   - https://github.com/kroitor/asciichart/issues/56#issuecomment-1320508054
+ *
+ * - Nik Kyriakides (@nicholaswmin)
+ */
+
 import asciichart from 'asciichart'
 import stripAnsi from 'strip-ansi'
 

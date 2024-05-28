@@ -2,14 +2,15 @@
 # chai-http-raw
 
 Chai.js plugin that returns raw HTTP responses.
-  - Used for getting access to raw response,
-    before it's potentially decompressed by superagent/chai-http,
-    to test if response is really sent in a compressed format.
+
+Used for getting access to raw response,
+before it's potentially decompressed by superagent/chai-http,
+to test if response is really sent in a compressed format.
 
 ## Usage:
 
 ```js
-import chaiHttpRaw from './index.js'
+import chaiHttpRaw from 'chai-http-raw'
 
 chai.use(chaiHttpRaw)
 
@@ -21,6 +22,10 @@ chai.requestRaw(app)
     server.close() shutdown server when done!
   })
 ```
+
+## Authors
+
+ - @nicholasmin
 */
 
 import http from 'node:http'
