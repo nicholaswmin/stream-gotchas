@@ -9,7 +9,7 @@ affect stream flow behavior
 ## Usage
 
 ```js
-import Monitor from './index.js'
+import Monitor from 'streamstat' // not published yet!
 
 // Instantiate a monitor
 
@@ -45,7 +45,7 @@ setTimeout(() => monitor.reportGroups({
 }), 4000)
 
 // or ..
-// Report 2: All logs from all streams 
+// Report 2: All logs from all streams
 
 setTimeout(() => monitor.report({
   filter: ['drain', 'resume', 'pause'] // optional: exclude events
