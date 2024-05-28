@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node --watch app.js",
-    "test": "npm run initdb && npx mocha test/**.spec.js",
+    "test": "npm run initdb && npx mocha test/**.spec.js test/utils/**/test/**.spec.js",
     "initdb": "node initdb.js"
   },
   "mocha": {

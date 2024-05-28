@@ -32,13 +32,28 @@ import http from 'node:http'
 
 export default (chai, _) => {
   chai.requestRaw = app => ({
-    get: path => new Promise((resolve, reject) => {
+    get: (path, opts) => new Promise((resolve, reject) => {
       const protocol = 'http://'
       const host = 'localhost'
       const server = app.listen(0, host, () => {
-        http.get(`${protocol}${host}:${server.address().port}${path}`,
-          res => resolve({ res, server })
-        )
+
+      const url = `${protocol}${host}:${server.address().port}${path}`
+
+      return http.get(url, opts, res => {
+          const err = res.statusCode < 200 || res.statusCode > 299 ?
+            new Error('Request Raw Failed.' + `Status: ${res.statusCode}`) :
+            null
+
+          if (err) {
+            // Consume data to free up memory
+            res.resume()
+            console.error(error.message)
+
+            return reject(error.message)
+          }
+
+          return resolve({ res, server })
+        })
         .on('error', err => server.close(() => reject(err)))
       })
     })

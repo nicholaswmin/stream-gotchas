@@ -7,12 +7,12 @@ import Memstat from '../index.js'
 chai.should()
 chai.use(chaiHttp)
 
-describe('Leak detection', function() {
+describe('memstat utility', function() {
   this.timeout(15 * 1000).slow(10 * 1000)
 
   before('Setup one memstat', function() {
     this.requestCount = 30
-    this.memstat = new Memstat({ live: false, drawPlot: true })
+    this.memstat = new Memstat({ live: false, drawPlot: false })
   })
 
   beforeEach('start memstart before each test', function() {
@@ -56,7 +56,7 @@ describe('Leak detection', function() {
     })
   })
 
-  describe('route does not leak nor spike', function() {
+  describe('route neither leaks nor spikes', function() {
     it('does not consider it leaky', async function() {
       for (let i = 0; i < this.requestCount; i++)
         await chai.request(app).get('/watertight')

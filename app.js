@@ -39,12 +39,16 @@ app.get('/uncompressed', async (req, res, next) => {
 })
 
 app.get('/gzipped', async (req, res, next) => {
-  res.setHeader('Content-Encoding', 'gzip')
-
   const stream = db('messages').select('*').stream()
-  const gzip = zlib.createGzip()
+  const jsonStream = stream.pipe(JSONStream.stringify())
 
-  stream.pipe(JSONStream.stringify()).pipe(gzip).pipe(res)
+  if (req.acceptsEncodings().includes('gzip')) {
+    res.setHeader('Content-Encoding', 'gzip')
+
+    jsonStream.pipe(zlib.createGzip()).pipe(res)
+  } else {
+    jsonStream.pipe(res)
+  }
 
   stream.on('error', err => {
     stream.destroy()

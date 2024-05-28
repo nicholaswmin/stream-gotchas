@@ -29,7 +29,8 @@ describe('GET /gzipped', function() {
     it('sends ~ 60 KB of data', function () {
       const counter = byteCounter()
 
-      return chai.requestRaw(app).get(url)
+      return chai.requestRaw(app)
+        .get(url, { headers: { 'accept-encoding': 'gzip' }})
         .then(({ res, server }) => {
           return pipeline(res, counter).then(() => {
             counter.bytes.should.be.within(55000, 65000)
@@ -42,15 +43,28 @@ describe('GET /gzipped', function() {
     shared.it.sendsParseableData(url)
   })
 
-  // @TODO Not implemented
-  describe.skip('client does not accept compressed responses', function() {
-    // @TODO Not implemented
-    it.skip('marks the response as uncompressed', async function () {
+  describe('client does not accept compressed responses', function() {
+    it('marks the response as uncompressed', async function () {
       const res = await chai.request(app).get(url)
+        .set('accept-encoding', 'identity')
 
       res.should.not.have.header('Content-Encoding')
     })
 
-    // inc. shared.it.sendsParseableData(url) // @TODO
+    it('sends ~ 1000 KB of data', function () {
+      const counter = byteCounter()
+
+      return chai.requestRaw(app)
+        .get(url, { headers: { 'accept-encoding': 'identity' }})
+        .then(({ res, server }) => {
+          return pipeline(res, counter).then(() => {
+            counter.bytes.should.be.within(900000, 1100000)
+
+            server.close()
+          })
+        })
+    })
+
+    shared.it.sendsParseableData(url)
   })
 })

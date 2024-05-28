@@ -83,7 +83,7 @@ export default class Memstat {
       this.update().plot.end()
   }
 
-  // private  
+  // private
   // creates stats for internal-use, i.e:
   // plot drawing
   getStats() {
