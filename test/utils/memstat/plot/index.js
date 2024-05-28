@@ -12,21 +12,6 @@ const bytesToMB = bytes => Math.ceil((bytes / 1024) / 1024)
 // - we always make sure we keep first/last elements
 const areEqualConsecutive = (point, i, arr) => i == 0 || point !== arr[i - 1]
 
-// pick elements of equal distance between them.
-// i.e for an `array.length: 10` & `minCount:2`
-// we'll end up with 3 elements at equal distance at the array index from
-// each other; always keeping the first/last elements.
-//
-// This: `[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]` becomes `[1, 6, 10]`
-// @NOTE Unused
-const toMinimumEquidistant = minCount => (acc, point, i, arr) => {
-  const isFirst = i === 0
-  const isLast = arr.length - 1
-  const isEquidistant = i % Math.ceil(arr.length / minCount) === 0
-
-  return isFirst || isLast || isEquidistant ? [...acc, point] : acc
-}
-
 export default class Plot {
   constructor({ initial = 0, watch }) {
     this.watch = watch
