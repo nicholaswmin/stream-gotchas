@@ -35,7 +35,7 @@ app.get('/leaky/sometimes', (req, res) => {
 app.get('/spikey', async ({ originalUrl }, res) => {
   let baz = [],
       twoMegabyte = Array.from({ length: 275000 }, _ => Math.random()),
-      randomPos = Math.round(Math.random() * 1000000)
+      randomPos = Math.round(Math.random() * 275000)
 
   baz.push(JSON.stringify(twoMegabyte))
 
@@ -45,7 +45,7 @@ app.get('/spikey', async ({ originalUrl }, res) => {
 // No problemo
 
 app.get('/watertight', (req, res) => {
-  wait(10).then(() => res.sendStatus(204))
+  wait(10).then(() => res.json({ first: 'John', last: 'Doe' }))
 })
 
 export default app.listen(0)

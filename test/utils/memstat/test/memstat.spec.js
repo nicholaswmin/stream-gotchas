@@ -60,7 +60,7 @@ describe('memstat utility', function() {
     it('does not consider it leaky', async function() {
       for (let i = 0; i < this.requestCount; i++)
         await chai.request(app).get('/watertight')
-        . then(res => res.should.have.status(204))
+        . then(res => res.should.have.status(200))
 
       const mem = await this.memstat.stop()
 
