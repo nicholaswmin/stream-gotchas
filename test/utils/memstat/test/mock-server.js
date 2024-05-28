@@ -7,25 +7,25 @@ const app = express()
 
 // Always leaks
 
-let leakyOne = []
+let leakyAlways = []
 
 app.get('/leaky/always', (req , res) => {
   const megabyte = Array.from({ length: 55000 }, _ => Math.random())
 
-  leakyOne.push(JSON.stringify(megabyte))
+  leakyAlways.push(JSON.stringify(megabyte))
 
   wait(10).then(() => res.sendStatus(204))
 })
 
 // Leaks sometimes
 
-let leakyTwo = []
+let leakySometimes = []
 
 app.get('/leaky/sometimes', (req, res) => {
   const megabyte = Array.from({ length: 55000 }, _ => Math.random())
 
   if (Math.random() > 0.50)
-    leakyTwo.push(JSON.stringify(megabyte))
+    leakySometimes.push(JSON.stringify(megabyte))
 
   wait(10).then(() => res.sendStatus(204))
 })
