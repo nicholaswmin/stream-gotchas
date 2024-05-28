@@ -8,7 +8,9 @@ const app = express()
 const db = knex({
   client: 'pg',
   connection: {
-    connectionString: process.env.DATABASE_URL,
+    connectionString: process.env.DATABASE_URL || (() => {
+      throw new Error('DATABASE_URL env. var is required')
+    })(),
     ssl: process.env.DATABASE_URL.includes('localhost') ?
       false : { rejectUnauthorized: false }
   }

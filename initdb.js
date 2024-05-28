@@ -1,8 +1,8 @@
 import knex from 'knex'
 
-const { DATABASE_URL } = process.env
-if (!DATABASE_URL)
-  throw new Error ('DATABASE_URL env. var is required')
+const DATABASE_URL = process.env.DATABASE_URL || (() => {
+  throw new Error('DATABASE_URL env. var is required')
+})()
 
 const name = DATABASE_URL.split('/')[3]
 const isLocalDB = DATABASE_URL.includes('@localhost')
