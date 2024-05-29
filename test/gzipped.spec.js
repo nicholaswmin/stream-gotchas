@@ -1,4 +1,3 @@
-import { pipeline } from 'node:stream/promises'
 import chai from 'chai'
 import chaiHttp from 'chai-http'
 
