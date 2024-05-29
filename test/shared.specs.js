@@ -28,14 +28,14 @@ export default {
     },
 
     sendsParseableData: url => {
-      it('sends data that parses to 25000 messages', async function () {
+      it('sends data that parses to 2500 messages', async function () {
         const messages = await chai.request(app)
           .get(url)
           .parse(binaryParser).buffer()
           .then(res => JSON.parse((new TextDecoder('UTF-8'))
           .decode(res.body)))
 
-        messages.should.be.an('Array').with.length(25000)
+        messages.should.be.an('Array').with.length(2500)
       })
     }
   }

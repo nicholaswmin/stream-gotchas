@@ -23,14 +23,14 @@ describe('GET /gzipped', function() {
       res.should.have.header('Content-Encoding', 'gzip')
     })
 
-    it('sends ~ 60 KB of data', async function () {
+    it('sends ~ 190 KB of data', async function () {
       const { server, res } = await get(app, url,  { 'accept-encoding': 'gzip' })
 
       return new Promise(resolve => {
         let bytes = 0
         res.on('data', data => bytes += Buffer.byteLength(data))
         res.on('end', () => {
-          bytes.should.be.within(50000, 70000)
+          bytes.should.be.within(150000, 200000)
 
           server.close()
           resolve()
@@ -49,7 +49,7 @@ describe('GET /gzipped', function() {
       res.should.not.have.header('Content-Encoding')
     })
 
-    it('sends ~ 1000 KB of data', async function () {
+    it('sends ~ 135 MB of data', async function () {
       const { server, res } = await get(app, url, {
         'accept-encoding': 'identity'
       })
@@ -58,7 +58,7 @@ describe('GET /gzipped', function() {
         let bytes = 0
         res.on('data', data => bytes += Buffer.byteLength(data))
         res.on('end', () => {
-          bytes.should.be.within(900000, 1100000)
+          bytes.should.be.within(120000000, 150000000)
 
           server.close()
           resolve()

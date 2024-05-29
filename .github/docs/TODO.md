@@ -4,6 +4,15 @@ aX  W# Todo
   - err props etc
   - size of data still in buffer
 - [ ] Add Memory leak detection
+- [ ] Split each of the cases in it's own folder:
+    - Demonstrate:
+    - [ ] The problematic code (with tests verifying its errors)
+    - [ ] The solution (with tests verifying its correctness)
+    - Each case must measure the following:
+      - [ ] Query errancy
+      - [ ] Memory leak
+      - [ ] Memory pressure
+      - [ ] DB pool utilisation
 
 ## Additional Test Cases
 
@@ -17,6 +26,8 @@ in the "wild" very frequently
 
 Note: This involves an in-memory store, maybe keep it just DB/HTTP related
 for now?
+
+**Update:** When using a DB instead of in memory readable it leaks like mad.
 
 ```js
 app.get('/', (req, res) => {

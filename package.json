@@ -4,7 +4,7 @@
   "description": "Reproduction test case of issues in http streams",
   "type": "module",
   "scripts": {
-    "start": "node --watch app.js",
+    "start": "node --max-old-space-size=500 --watch app.js",
     "start-dev": "npm start",
     "test": "npx mocha test/**.spec.js test/utils/**/test/**.spec.js",
     "pretest": "npm run initdb",
@@ -52,6 +52,7 @@
     "chai": "^4.4.1",
     "chai-http": "^4.4.0",
     "mocha": "^10.4.0",
+    "prettyoutput": "^1.2.0",
     "single-line-log": "^1.1.2",
     "strip-ansi": "^7.1.0",
     "superagent-binary-parser": "^1.0.1"

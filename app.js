@@ -1,8 +1,11 @@
 import zlib from 'node:zlib'
+import { Readable, PassThrough, Transform } from 'node:stream'
 import express from 'express'
 import listroutes from 'express-list-routes'
 import JSONStream from 'JSONStream'
 import knex from 'knex'
+
+import Memstat from './test/utils/memstat/watch.js'
 
 const app = express()
 const db = knex({
@@ -13,6 +16,14 @@ const db = knex({
     })(),
     ssl: process.env.DATABASE_URL.includes('localhost') ?
       false : { rejectUnauthorized: false }
+  },
+  pool: {
+    min: 2,
+    max: 50,
+    afterCreate: (conn, done) => conn.query(
+      `SET statement_timeout=10000000;`,
+      err => done(err, conn)
+    )
   }
 })
 
@@ -54,8 +65,7 @@ app.get('/gzipped', async (req, res, next) => {
 
   stream.on('error', err => {
     stream.destroy()
-    res.status(500).send('Oops, error :(')
-    console.log(err.message)
+    next(err)
   })
 })
 
@@ -67,7 +77,7 @@ app.get('/client-abort', async (req, res, next) => {
 
   stream.on('error', err => {
     stream.destroy()
-    res.status(500).send('Oops, error :(')
+    next(err)
   })
 
   setTimeout(() => req.destroy(new Error('client abort')), 250)
@@ -82,12 +92,16 @@ app.get('/query-error', async (req, res, next) => {
 
   stream.on('error', err => {
     stream.destroy()
-    res.status(500).send('Oops, error :(')
-    console.log(err.message)
+    next(err)
   })
 
   await db.raw(`SELECT pg_terminate_backend(${connection.processID});`)
   await db.client.releaseConnection()
+})
+
+app.use((err, req, res, next) => {
+  console.error(err)
+  res.status(500).send('oops! server error!')
 })
 
 export default app.listen(process.env.PORT || 5020, function() {

@@ -10,11 +10,11 @@ affect stream flow behavior
 
 ```js
 import Monitor from 'streamstat' // not published yet!
+import single from 'single-line-log'
 
 // Instantiate a monitor
 
 const monitor = new Monitor({
-  title: 'Compresion Endpoint Test',
    // optional: ignore noisy events
   ignore: ['pause', 'drain' ]
 })
@@ -37,28 +37,34 @@ monitor
 readable.pipe(passthrough).pipe(writeable)
 
 // Log their lifecycle and current state:
+// @NOTE Start process with --streamwatch
 
-// Report 1: Reports each stream, grouped with its logs
+// or ...
+// Report 1:  Reports each stream, grouped with its logs
 
-setTimeout(() => monitor.reportGroups({
-  filter: ['drain', 'resume', 'pause'] // optional: exclude events
-}), 4000)
+let i = 0
+process.argv.includes('--streamwatch') ? setInterval(() => {
+  const report = monitor.reportGroups()
+  single.stdout(pretty({i: ++i, report}))
+}) : null
 
-// or ..
-// Report 2: All logs from all streams
+// or ...
+// Report 3: Log their buffer size
 
-setTimeout(() => monitor.report({
-  filter: ['drain', 'resume', 'pause'] // optional: exclude events
-}), 4000)
+let i = 0
+process.argv.includes('--streamwatch') ? setInterval(() => {
+  const report = monitor.reportBuffersize()
+  single.stdout(pretty({i: ++i, report}))
+}) : null
 ```
 */
 
 import crypto from 'node:crypto'
+import prettyOutput from 'prettyoutput'
 import { styleText as col } from 'node:util'
 
 export default class Monitor {
-  constructor({ title = 'Report', ignore = [] } = {}) {
-    this.title = title
+  constructor({ ignore = [] } = {}) {
     this.ignore = ignore
     this.streams = []
 
@@ -73,6 +79,15 @@ export default class Monitor {
       // writeable
       'writeableNeedDrain',
       'writeableAborted',
+      {
+        name: 'writableLength',
+        fn: bytes => Math.round(bytes) + ' bytes'
+      },
+      {
+        name: 'readableLength',
+        fn: bytes => Math.round(bytes) + ' bytes'
+      },
+
 
       // all
       'aborted',
@@ -98,18 +113,18 @@ export default class Monitor {
 
       // -- Props --
 
-      // - Error
       'readableFlowing': 'blue',
+
+      // - Error
+      'aborted': 'red',
       'writeableNeedDrain': 'red',
+      'errored': 'red',
 
       // - Warn
-      'readableAborted': 'yellow',
-      'writeableAborted': 'yellow',
       'destroyed': 'yellow',
-      'aborted': 'yellow'
+      'writableLength': 'yellow',
+      'readableLength': 'yellow'
     }
-
-    console.info('\n', 'Monitor started...')
   }
 
   add(stream, name) {
@@ -127,10 +142,10 @@ export default class Monitor {
 
     stream.getStyledProps = function() {
       return self._reportedProps.reduce((acc, prop) => {
-        return this[prop] ?
-            acc.concat({ name: prop, value: stream[prop] }) :
-            acc
-      }, [])
+        return typeof prop !== 'string' && typeof this[prop.name] !== 'undefined' ?
+          acc.concat({ name: prop.name, value: prop.fn(this[prop.name]) }) :
+            this[prop] ? acc.concat({ name: prop, value: stream[prop] }) : acc
+          }, [])
         .map(prop => {
           const color = prop.value && self._colors[prop.name] ?
             self._colors[prop.name] : self._colors['*']
@@ -205,56 +220,31 @@ export default class Monitor {
   }
 
   report() {
-    this
-      ._printTitle('Report: ' + this.title)
-      ._print('------------')
-
-    this.getCollatedReindexedLogs()
-      .forEach(styled => {
-        console.log(styled.index, styled.src, styled.event, styled.err)
-      })
+    return this.getCollatedReindexedLogs()
+      .map(styled => `${styled.src}: ${styled.event} ${styled.err || ''}`)
   }
 
   reportGroups() {
-    this._printTitle('Report: ' + this.title)
-
     const logs = this.getCollatedReindexedLogs()
 
-    this.streams.forEach(stream => {
-      this._printSubtitle(`Stream: ${stream.mnt.name}`)
-      ._print('-------')
-
-      stream
-        .getStyledProps()
-        .forEach(styled => {
-          console.log(styled.name, ':', styled.value)
-        })
-
-      this._print('--')
-
-      logs
-        .filter(log => log.original_src === stream.mnt.name)
-        .forEach(styled => {
-          console.log(styled.index, styled.event, styled.err)
-        })
+    return this.streams.map(stream => {
+      return {
+        name: stream.mnt.name,
+        props: stream
+          .getStyledProps()
+          .map(styled => `${styled.name}: ${styled.value}`),
+          logs: logs
+            .filter(log => log.original_src === stream.mnt.name)
+            .map(styled => `${styled.index}: ${styled.event} ${styled.err || ''}`)
+      }
     })
   }
 
-  _printTitle(t) {
-    console.log('\n')
-    console.log(col(['bold', 'magenta'], `${t}`))
-
-    return this
-  }
-
-  _printSubtitle(t) {
-    console.log('\n')
-    console.log(col(['magenta'], `${t}`))
-
-    return this
-  }
-
-  _print(t) {
-    console.log(t)
+  reportBuffersize() {
+    return this.streams.map(stream => {
+      return stream.getStyledProps()
+        .filter(styled => styled.name.includes('Length'))
+        .map(styled => `${stream.mnt.name} : ${styled.name}: buffer: ${styled.value}`)
+    })
   }
 }
