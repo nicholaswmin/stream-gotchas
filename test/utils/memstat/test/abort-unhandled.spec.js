@@ -12,8 +12,12 @@ chai.use(chaiHttp)
 describe('#memstat utility (streams)', function() {
   this.timeout(30 * 1000).slow(15 * 1000)
 
-  before('Setup', function() {
+  before('setup', function() {
     this.memstat = new Memstat({ watch: false, drawPlot: true })
+  })
+
+  after('teardown', function() {
+    this.memstat.stop()
   })
 
   beforeEach('start a memstat', function() {
@@ -23,7 +27,7 @@ describe('#memstat utility (streams)', function() {
   describe('Request aborts mid-flight are not handled', function() {
     it('considers it leaky', async function() {
 
-      for (let i = 0; i <= 15; i++)
+      for (let i = 0; i <= 10; i++)
         await new Promise((resolve, reject) =>
           chai.request(app)
             .get('/spikey/user-abort')

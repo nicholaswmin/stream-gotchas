@@ -9,16 +9,17 @@ import { setTimeout as wait } from 'node:timers/promises'
 import express from 'express'
 
 const app = express()
-const dummy = amount => Array.from({ length: 1000 * amount }, _ => ({
-  foo: 'bar'.repeat(1000 * amount)
-}))
+
+const createDummyData = ({ messageCount = 1000, messageSizeKB = 10 } = {}) =>
+  Array.from({ length: messageCount }, _ =>
+    JSON.stringify({ foo: 'bar'.repeat(350 * messageSizeKB) }))
 
 // Always leaks
 
 let leakyOne = []
 
 app.get('/leaky/always', (req , res) => {
-  const data = dummy(1)
+  const data = createDummyData()
 
   leakyOne.push(JSON.stringify(data))
 
@@ -30,7 +31,7 @@ app.get('/leaky/always', (req , res) => {
 let leakyTwo = []
 
 app.get('/leaky/sometimes', (req, res) => {
-  const data = dummy(1)
+  const data = createDummyData()
 
   if (Math.random() > 0.50)
     leakyTwo.push(JSON.stringify(data))
@@ -45,7 +46,7 @@ app.get('/leaky/sometimes', (req, res) => {
 
 app.get('/spikey', async ({ originalUrl }, res) => {
   let baz = [],
-    data = dummy(1),
+    data = createDummyData(),
     randomPos = Math.round(Math.random() * 275000)
 
   baz.push(JSON.stringify(data))
@@ -58,7 +59,7 @@ app.get('/spikey', async ({ originalUrl }, res) => {
 // user aborts
 
 app.get('/spikey/user-abort', (req, res) => {
-  const data = dummy(200)
+  const data = createDummyData({ messageSizeKB: 50 })
 
   const readable = new Readable.from(data)
   const passthrough = new PassThrough({
@@ -75,8 +76,7 @@ app.get('/spikey/user-abort', (req, res) => {
 // the user abort is handled so memory is far better
 
 app.get('/watertight/user-abort', (req, res) => {
-  const data = dummy(200)
-
+  const data = createDummyData({ messageSizeKB: 50 })
   const readable = new Readable.from(data)
 
   const passthrough = new PassThrough({

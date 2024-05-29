@@ -12,8 +12,12 @@ chai.use(chaiHttp)
 describe('#memstat utility (streams)', function() {
   this.timeout(30 * 1000).slow(15 * 1000)
 
-  before('Setup', function() {
+  before('setup', function() {
     this.memstat = new Memstat({ watch: false, drawPlot: true })
+  })
+
+  after('teardown', function() {
+    this.memstat.stop()
   })
 
   beforeEach('start a memstat', function() {
@@ -32,7 +36,7 @@ describe('#memstat utility (streams)', function() {
               probability: 0.30
             }, err => err ?
             reject(err) :
-            resolve()
+            setTimeout(() => resolve(), 100)
           )).end())
 
         const mem = await this.memstat.stop()
