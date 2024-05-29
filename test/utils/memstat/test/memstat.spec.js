@@ -1,13 +1,13 @@
 import chai from 'chai'
 import chaiHttp from 'chai-http'
 
-import app from './mock-server.js'
+import app from './leaky-server.js'
 import Memstat from '../index.js'
 
 chai.should()
 chai.use(chaiHttp)
 
-describe('memstat utility', function() {
+describe('#memstat utility', function() {
   this.timeout(15 * 1000).slow(10 * 1000)
 
   before('Setup one memstat', function() {

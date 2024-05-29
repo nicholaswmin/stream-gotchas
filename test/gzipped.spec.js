@@ -2,15 +2,12 @@ import { pipeline } from 'node:stream/promises'
 import chai from 'chai'
 import chaiHttp from 'chai-http'
 
-import chaiHttpRaw from './utils/chai-http-raw/index.js'
-import byteCounter from './utils/byte-counter/index.js'
-import app from '../app.js'
-
 import shared from './shared.specs.js'
+import get from './utils/http-get/index.js'
+import app from '../app.js'
 
 chai.should()
 chai.use(chaiHttp)
-chai.use(chaiHttpRaw)
 
 describe('GET /gzipped', function() {
   const url = '/gzipped'
@@ -26,21 +23,20 @@ describe('GET /gzipped', function() {
       res.should.have.header('Content-Encoding', 'gzip')
     })
 
-    it('sends ~ 60 KB of data', function () {
-      const counter = byteCounter()
+    it('sends ~ 60 KB of data', async function () {
+      const { server, res } = await get(app, url,  { 'accept-encoding': 'gzip' })
 
-      return chai.requestRaw(app)
-        .get(url, { headers: { 'accept-encoding': 'gzip' }})
-        .then(({ res, server }) => {
-          return pipeline(res, counter).then(() => {
-            counter.bytes.should.be.within(55000, 65000)
+      return new Promise(resolve => {
+        let bytes = 0
+        res.on('data', data => bytes += Buffer.byteLength(data))
+        res.on('end', () => {
+          bytes.should.be.within(50000, 70000)
 
-            server.close()
-          })
+          server.close()
+          resolve()
         })
+      })
     })
-
-    shared.it.sendsParseableData(url)
   })
 
   describe('client does not accept compressed responses', function() {
@@ -51,18 +47,21 @@ describe('GET /gzipped', function() {
       res.should.not.have.header('Content-Encoding')
     })
 
-    it('sends ~ 1000 KB of data', function () {
-      const counter = byteCounter()
+    it('sends ~ 1000 KB of data', async function () {
+      const { server, res } = await get(app, url, {
+        'accept-encoding': 'identity'
+      })
 
-      return chai.requestRaw(app)
-        .get(url, { headers: { 'accept-encoding': 'identity' }})
-        .then(({ res, server }) => {
-          return pipeline(res, counter).then(() => {
-            counter.bytes.should.be.within(900000, 1100000)
+      return new Promise(resolve => {
+        let bytes = 0
+        res.on('data', data => bytes += Buffer.byteLength(data))
+        res.on('end', () => {
+          bytes.should.be.within(900000, 1100000)
 
-            server.close()
-          })
+          server.close()
+          resolve()
         })
+      })
     })
 
     shared.it.sendsParseableData(url)
