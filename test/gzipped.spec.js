@@ -37,6 +37,8 @@ describe('GET /gzipped', function() {
         })
       })
     })
+
+    shared.it.sendsParseableData(url)
   })
 
   describe('client does not accept compressed responses', function() {

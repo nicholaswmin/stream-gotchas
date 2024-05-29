@@ -18,7 +18,7 @@ global.gc = vm.runInNewContext('gc')
 
 export default class Memstat {
   constructor({ watch = false, drawPlot = false } = {}) {
-    this.watch = watch || process.argv.includes('watchmem')
+    this.watch = watch || process.argv.includes('--memwatch')
     this.drawPlot = drawPlot
 
     this.initial = null

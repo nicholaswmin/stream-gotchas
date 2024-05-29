@@ -11,7 +11,6 @@ describe('#memstat utility', function() {
   this.timeout(15 * 1000).slow(10 * 1000)
 
   before('Setup one memstat', function() {
-    this.requestCount = 30
     this.memstat = new Memstat({ live: false, drawPlot: false })
   })
 
@@ -20,8 +19,8 @@ describe('#memstat utility', function() {
   })
 
   describe('route consistently leaks memory', function() {
-    it('detects a leak', async function() {
-      for (let i = 0; i < this.requestCount; i++)
+    it('conmsiders it leaky', async function() {
+      for (let i = 0; i < 50; i++)
         await chai.request(app)
           .get('/leaky/always')
           .then(res => res.should.have.status(204))
@@ -33,8 +32,8 @@ describe('#memstat utility', function() {
   })
 
   describe('route leaks memory for 50% of requests', function() {
-    it('detects a leak', async function() {
-      for (let i = 0; i < this.requestCount; i++)
+    it('conmsiders it leaky', async function() {
+      for (let i = 0; i < 50; i++)
         await chai.request(app).get('/leaky/sometimes')
           .then(res => res.should.have.status(204))
 
@@ -46,7 +45,7 @@ describe('#memstat utility', function() {
 
   describe('route uses a lot of memory but doesnt leak', function() {
     it('does not consider it leaky', async function() {
-      for (let i = 0; i < this.requestCount; i++)
+      for (let i = 0; i < 50; i++)
         await chai.request(app).get('/spikey')
           .then(res => res.should.have.status(200))
 
@@ -58,7 +57,7 @@ describe('#memstat utility', function() {
 
   describe('route neither leaks nor spikes', function() {
     it('does not consider it leaky', async function() {
-      for (let i = 0; i < this.requestCount; i++)
+      for (let i = 0; i < 50; i++)
         await chai.request(app).get('/watertight')
         . then(res => res.should.have.status(200))
 

@@ -65,8 +65,8 @@ export default class Plot {
       min: 1,
       max: Math.ceil(20 + this.current * 1.25),
       margin: 1,
-      height: this.window.height - 10,
-      width: this.window.width - 5,
+      height: this.window.height - 20,
+      width: this.window.width - 7,
       hideXLabel: true,
       colors: [ this.leaks ? asciichart.red : asciichart.green ],
       ...opts

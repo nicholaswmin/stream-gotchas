@@ -9,13 +9,16 @@ import { setTimeout as wait } from 'node:timers/promises'
 import express from 'express'
 
 const app = express()
+const dummy = amount => Array.from({ length: 1000 * amount }, _ => ({
+  foo: 'bar'.repeat(1000 * amount)
+}))
 
 // Always leaks
 
 let leakyOne = []
 
 app.get('/leaky/always', (req , res) => {
-  const data = Array.from({ length: 55000 }, _ => Math.random())
+  const data = dummy(1)
 
   leakyOne.push(JSON.stringify(data))
 
@@ -27,8 +30,7 @@ app.get('/leaky/always', (req , res) => {
 let leakyTwo = []
 
 app.get('/leaky/sometimes', (req, res) => {
-  const data = Array.from({ length: 55000 },
-    _ => Math.random())
+  const data = dummy(1)
 
   if (Math.random() > 0.50)
     leakyTwo.push(JSON.stringify(data))
@@ -43,9 +45,8 @@ app.get('/leaky/sometimes', (req, res) => {
 
 app.get('/spikey', async ({ originalUrl }, res) => {
   let baz = [],
-      data = Array.from({ length: 275000 },
-        _ => Math.random()), // ~2 MB
-      randomPos = Math.round(Math.random() * 275000)
+    data = dummy(1),
+    randomPos = Math.round(Math.random() * 275000)
 
   baz.push(JSON.stringify(data))
 
@@ -57,14 +58,13 @@ app.get('/spikey', async ({ originalUrl }, res) => {
 // user aborts
 
 app.get('/spikey/user-abort', (req, res) => {
-  const data = Array.from({ length: 500 },
-      (_, i) => Array(100).fill({ foo: 'bar'.repeat(3500) }))
+  const data = dummy(200)
 
   const readable = new Readable.from(data)
   const passthrough = new PassThrough({
     objectMode: true,
     transform(obj, _, cb) {
-      setTimeout(() => cb(null, JSON.stringify(obj)), 100)
+      setTimeout(() => cb(null, JSON.stringify(obj)), 50)
     }
   })
 
@@ -75,8 +75,7 @@ app.get('/spikey/user-abort', (req, res) => {
 // the user abort is handled so memory is far better
 
 app.get('/watertight/user-abort', (req, res) => {
-  const data = Array.from({ length: 500 },
-      (_, i) => ({ foo: 'bar'.repeat(350000) }))
+  const data = dummy(200)
 
   const readable = new Readable.from(data)
 
@@ -85,7 +84,7 @@ app.get('/watertight/user-abort', (req, res) => {
     transform(obj, _, cb) {
       setTimeout(() =>
         cb(null, JSON.stringify(obj))
-      , 100) // Simulate a network delay
+      , 50) // Simulate a network delay
     }
   })
 
