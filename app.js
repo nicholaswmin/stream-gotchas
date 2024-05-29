@@ -1,5 +1,4 @@
 import zlib from 'node:zlib'
-import { Readable, PassThrough, Transform } from 'node:stream'
 import express from 'express'
 import listroutes from 'express-list-routes'
 import JSONStream from 'JSONStream'
@@ -38,65 +37,74 @@ app.get('/', (req, res) => {
 })
 
 app.get('/uncompressed', async (req, res, next) => {
-  const stream = db('messages').select('*').stream()
+  try {
+    const stream = db('messages').select('*').stream()
 
-  stream.pipe(JSONStream.stringify()).pipe(res)
+    stream.pipe(JSONStream.stringify()).pipe(res)
 
-  stream.on('error', err => {
-    console.log(err.message)
+    stream.on('error', err => {
+      console.log(err.message)
 
-    res.status(500).send('Status:500')
+      res.status(500).send('Status:500')
 
-    stream.destroy()
-  })
+      stream.destroy()
+    })
+  } catch (err) {
+    next(err)
+  }
 })
 
 app.get('/gzipped', async (req, res, next) => {
-  const stream = db('messages').select('*').stream()
-  const jsonStream = stream.pipe(JSONStream.stringify())
+  try {
+    const stream = db('messages').select('*').stream()
+    const jsonStream = stream.pipe(JSONStream.stringify())
 
-  if (req.acceptsEncodings().includes('gzip')) {
-    res.setHeader('Content-Encoding', 'gzip')
+    if (req.acceptsEncodings().includes('gzip')) {
+      res.setHeader('Content-Encoding', 'gzip')
 
-    jsonStream.pipe(zlib.createGzip()).pipe(res)
-  } else {
-    jsonStream.pipe(res)
-  }
-
-  stream.on('error', err => {
-    stream.destroy()
+      jsonStream.pipe(zlib.createGzip()).pipe(res)
+    } else {
+      jsonStream.pipe(res)
+    }
+  } catch (err) {
     next(err)
-  })
+  }
 })
 
 app.get('/client-abort', async (req, res, next) => {
-  const stream = db('await pg_sleep(3)').select('*').stream()
-  const gzip = zlib.createGzip()
+  try {
+    const stream = db('await pg_sleep(3)').select('*').stream()
+    const gzip = zlib.createGzip()
 
-  stream.pipe(JSONStream.stringify()).pipe(gzip).pipe(res)
+    stream.pipe(JSONStream.stringify()).pipe(gzip).pipe(res)
 
-  stream.on('error', err => {
-    stream.destroy()
+    stream.on('error', err => {
+      stream.destroy()
+      next(err)
+    })
+  } catch (err) {
     next(err)
-  })
-
-  setTimeout(() => req.destroy(new Error('client abort')), 250)
+  }
 })
 
 app.get('/query-error', async (req, res, next) => {
-  const connection = await db.client.acquireConnection()
-  const stream = db('pg_sleep').select('*').connection(connection).stream()
-  const gzip = zlib.createGzip()
+  try {
+    const connection = await db.client.acquireConnection()
+    const stream = db('pg_sleep').select('*').connection(connection).stream()
+    const gzip = zlib.createGzip()
 
-  stream.pipe(JSONStream.stringify()).pipe(gzip).pipe(res)
+    stream.pipe(JSONStream.stringify()).pipe(gzip).pipe(res)
 
-  stream.on('error', err => {
-    stream.destroy()
+    stream.on('error', err => {
+      stream.destroy()
+      next(err)
+    })
+
+    await db.raw(`SELECT pg_terminate_backend(${connection.processID});`)
+    await db.client.releaseConnection()
+  } catch (err) {
     next(err)
-  })
-
-  await db.raw(`SELECT pg_terminate_backend(${connection.processID});`)
-  await db.client.releaseConnection()
+  }
 })
 
 app.use((err, req, res, next) => {
