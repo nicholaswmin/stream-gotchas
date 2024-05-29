@@ -159,7 +159,7 @@ export default class Monitor {
         .map(this.styleLog.bind(this))
     }
 
-    if (stream._readableState) {
+    if (stream.readable) {
       // Ignoring `readable` & `data` handlers which affect flow.
       stream
         .on('close', function() { this.log('close' )})
@@ -169,7 +169,7 @@ export default class Monitor {
         .on('resume', function() { this.log('resume' )})
     }
 
-    if (stream._writableState) {
+    if (stream.writable) {
       stream
         .on('close', function() { this.log('close' )})
         .on('drain', function() { this.log('drain' )})
