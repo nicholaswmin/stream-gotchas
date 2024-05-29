@@ -99,7 +99,7 @@ export default class Monitor {
       // -- Props --
 
       // - Error
-      'readableFlowing': 'red',
+      'readableFlowing': 'blue',
       'writeableNeedDrain': 'red',
 
       // - Warn
