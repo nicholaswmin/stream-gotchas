@@ -121,6 +121,23 @@ app.get('/messages', async (req, res, next) => {
 - Manually release the connection
 - Enforce request timeouts as an additional guard
 
+Example:
+
+```js
+// ... app.get('...
+
+;[stream, stringifier, res]
+  .forEach(stream => stream.on('error', err => {
+    ;[req, stream, stringifier, gzip, res] // add more streams if necessary
+      .filter(stream => !stream.destroyed)
+      .forEach(stream => stream.destroy())
+
+    console.error(err) 
+  }))
+
+// More error handling needed, see rest of cases
+```
+
 ## Slow user connections
 
 Effects:
