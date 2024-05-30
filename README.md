@@ -115,6 +115,12 @@ Chrome: v124.0.6
 Postgres: v16
 ```
 
+## Additional Reading:
+
+- [Streams Handbook][streams-handbook]
+- [Anatomy of an HTTP transaction][anatomy-http]
+- [Stream: NodeJS reference]
+
 ## Authors
 
 @nicholaswmin
@@ -134,3 +140,6 @@ MIT License, 2024
 [json]: https://en.wikipedia.org/wiki/JSON
 [memleak]: https://en.wikipedia.org/wiki/Memory_leak
 [stop-the-world]: https://en.wikipedia.org/wiki/Tracing_garbage_collection#Stop-the-world_vs._incremental_vs._concurrent
+[anatomy-http]: https://nodejs.org/en/learn/modules/anatomy-of-an-http-transaction
+[streams-handbook]: https://github.com/JasonGhent/stream-handbook-epub
+[streams-node]: https://nodejs.org/api/stream.html
