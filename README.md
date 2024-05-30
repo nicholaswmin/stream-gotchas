@@ -1,7 +1,12 @@
 [![test-workflow][test-workflow-badge]][ci-test]
 
 # stream-repro
-List of corner/edge cases when [streaming][streams] [JSON][json] over HTTP.
+List of corner/edge cases when [streaming JSON][streaming] over HTTP,  
+i.e when doing something like:
+
+```js
+db.select('*').from('messages').stream().pipe(res)
+```
 
 Examples:
 
@@ -116,6 +121,7 @@ MIT License, 2024
 [test-workflow-badge]: https://github.com/nicholaswmin/stream-repro/actions/workflows/tests.yml/badge.svg
 [ci-test]: https://github.com/nicholaswmin/stream-repro/actions/workflows/tests.yml
 [streams]: https://nodejs.org/api/stream.html#readable-streams
+[streaming]: https://en.wikipedia.org/wiki/Chunked_transfer_encoding
 [nicholaswmin]: https://github.com/nicholaswmin
 [httpie]: https://httpie.io/docs/cli/installation
 [oilpan]: https://v8.dev/blog/oilpan-library
