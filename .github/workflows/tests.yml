@@ -40,6 +40,6 @@ jobs:
     - run: sudo apt install httpie
     # Actual test
     - run: npm ci
-    - run: npm test --no-bail
+    - run: npm test
       env:
         DATABASE_URL: postgres://postgres:abc123@localhost:5432/repro
