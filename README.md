@@ -100,10 +100,6 @@ Chrome: v124.0.6
 Postgres: v16
 ```
 
-## Notes
-
-- https://stackoverflow.com/questions/41155877/node-js-passthrough-stream-not-closing-properly
-
 ## Authors
 
 @nicholaswmin
