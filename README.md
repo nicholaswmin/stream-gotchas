@@ -3,6 +3,13 @@
 # stream-repro
 List of corner/edge cases when [streaming][streams] [JSON][json] over HTTP.
 
+Examples:
+
+- [User aborts the request while in-flight][cases-ex-1]
+- [Stream errors-out while in-flight][cases-ex-2]
+
+...etc
+
 A draft description of each case can be [found here][cases].  
 Each case includes tests for its failure and tests for it's solution.
 
@@ -112,6 +119,8 @@ MIT License, 2024
 [nicholaswmin]: https://github.com/nicholaswmin
 [httpie]: https://httpie.io/docs/cli/installation
 [oilpan]: https://v8.dev/blog/oilpan-library
-[cases]: .github/docs/CASES.md
+[cases]: .github/docs/CASES.md#user-aborts-request-mid-flight
+[cases-ex-1]: .github/docs/CASES.md#user-aborts-request-mid-flight
+[cases-ex-2]: .github/docs/CASES.md#processing-streams-error-out-mid-flight
 [json]: https://en.wikipedia.org/wiki/JSON
 [memleak]: https://en.wikipedia.org/wiki/Memory_leak
