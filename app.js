@@ -1,6 +1,8 @@
-import zlib from 'node:zlib'
-import express from 'express'
 import { setTimeout as wait } from 'node:timers/promises'
+import { Transform } from 'node:stream'
+import zlib from 'node:zlib'
+
+import express from 'express'
 import listroutes from 'express-list-routes'
 import JSONStream from 'JSONStream'
 import knex from 'knex'
@@ -167,6 +169,48 @@ app.get('/query-error', async (req, res, next) => {
       .pipe(JSONStream.stringify())
       .pipe(delay())
       .pipe(res)
+  } catch (err) {
+    next(err)
+  }
+})
+
+app.get('/query-error/trailers', async (req, res, next) => {
+  try {
+    const stream = db('messages')
+      .select('*')
+      .stream()
+
+    const stringifier = new Transform({
+      objectMode: true,
+      construct(cb) {
+        cb()
+        this.timesCalled = 0
+      },
+      transform(chunk, _, cb) {
+        res.addTrailers({'Stream-Status': 'error' })
+        return ++this.timesCalled < 10000 ?
+          cb(null, JSON.stringify(chunk)) :
+          cb(new Error('transformer has failed'))
+      }
+    })
+
+    stringifier.on('error', () => {
+      console.log('added trailer')
+      res.addTrailers({'Stream-Status': 'error' })
+      ;[req, stream, res].forEach(stream => {
+        if (!stream.destroyed)
+          stream.destroy()
+      })
+    })
+
+    res.writeHead(200, { 'Trailer': 'Stream-Status' })
+    console.log('added head')
+
+    setTimeout(() => {
+      res.addTrailers({'Stream-Status': 'ok' })
+    }, 50)
+
+    stream.pipe(stringifier).pipe(res)
   } catch (err) {
     next(err)
   }

@@ -183,12 +183,26 @@ The only possible way to set headers is if the query has not started streaming
 yet (because it's still querying the DB) and not a single byte made it down the
 wire.
 
+If streaming has started but you *must* send metadata can you consider
+using HTTP Header Trailers. This won't have any effect on any reasonable client
+- trailers are ignored when it comes to determining response status.
+
+However, if you control the client, you might be able to use them for
+error handling. This doesn't address any of the concerns of this issue.
+The response will still be considered Incomplete.
+
+NodeJS core provides `res.addTrailers`, [documented here][node-trailers]
+
+See [RFC9112, Section 8][rfc-trailers] for more.
+
 **Solution:**
 
 - Check if headers were already sent before doing anything of the sort
 `res.sendStatus(4xx)`.
+- Consider using HTTP Trailers.
 - Not much else to do if streaming has already started. Strictly speaking, it's
   a server error anyway so a 408 is not entirely appropriate.
+
 
 ## Superflous query-abort errors
 
@@ -258,6 +272,10 @@ don't `res.write` unless the previous call returned `true`
 
 ## Authors
 
-[@nicholaswmin][https://github.com/nicholaswmin]
+[@nicholaswmin](https://github.com/nicholaswmin)
+
+
 [pg-query]: https://www.npmjs.com/package/pg-query-stream
 [req-on-err]: https://nodejs.org/en/learn/modules/anatomy-of-an-http-transaction#a-quick-thing-about-errors
+[node-trailers]: https://nodejs.org/api/http.html#responseaddtrailersheaders
+[rfc-trailers]: https://www.rfc-editor.org/rfc/rfc9112#section-8

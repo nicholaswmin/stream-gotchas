@@ -5,18 +5,17 @@ List of corner/edge cases when [streaming JSON][streaming] over HTTP,
 i.e when doing something like:
 
 ```js
-// while this sample uses Express JS and pg-query-stream; these issues are
-// generic to most, if not all, database drivers or web frameworks
+// this uses 'express' and 'pg' but could be any database, any framework
 db.select('*').from('messages').stream().pipe(res)
 ```
 
 Examples:
 
-- [User aborts the request while in-flight][cases-ex-1]
-- [Stream errors-out while in-flight][cases-ex-2]
-- [Somekind of messup happened and I want to send a nice HTTP status][cases-ex-3]
+- [User aborts request in-flight][cases-ex-1]
+- [A stream errors-out in-flight][cases-ex-2]
+- [Something happened and I want to send a nicer HTTP status][cases-ex-3]
 
-...etc
+...and others.
 
 A draft description of each case can be [found here][cases].  
 Each case includes tests for its failure and tests for it's solution.
@@ -24,11 +23,11 @@ Each case includes tests for its failure and tests for it's solution.
 The test suite tests each case (both failure and solution) for:
 
 - **Memory pressure and [memory leaks][memleak]**.
-  - Are the stream amenable to garbage collection?
+  - Are all streams amenable to garbage collection?
 - **Runaway queries**
-  - Are there queries still running when they shouldnt?
+  - Are database queries still running when they shouldn't?
 - **Database connection release**.
-  - Does it unnecessarily hold-on to a database connection?
+  - Does we unnecessarily hold-on to a database connection?
 
 ## Install
 
