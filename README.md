@@ -5,6 +5,8 @@ List of corner/edge cases when [streaming JSON][streaming] over HTTP,
 i.e when doing something like:
 
 ```js
+// while this sample uses Express JS and pg-query-stream; these issues are
+// generic to most, if not all, database drivers or web frameworks
 db.select('*').from('messages').stream().pipe(res)
 ```
 
@@ -12,6 +14,7 @@ Examples:
 
 - [User aborts the request while in-flight][cases-ex-1]
 - [Stream errors-out while in-flight][cases-ex-2]
+- [Somekind of messup happened and I want to send a nice HTTP status][cases-ex-3]
 
 ...etc
 
@@ -21,10 +24,11 @@ Each case includes tests for its failure and tests for it's solution.
 The test suite tests each case (both failure and solution) for:
 
 - **Memory pressure and [memory leaks][memleak]**.
-- **Runaway queries**.
-  Are there queries still running when they shouldnt?
+  - Are the stream amenable to garbage collection?
+- **Runaway queries**
+  - Are there queries still running when they shouldnt?
 - **Database connection release**.
-  Does it unnecessarily hold-on to a database connection?
+  - Does it unnecessarily hold-on to a database connection?
 
 ## Install
 
@@ -127,6 +131,7 @@ MIT License, 2024
 [cases]: .github/docs/CASES.md#user-aborts-request-mid-flight
 [cases-ex-1]: .github/docs/CASES.md#user-aborts-the-request-mid-flight
 [cases-ex-2]: .github/docs/CASES.md#processing-streams-error-out-mid-flight
+[cases-ex-3]: .github/docs/CASES.md#sending-http-headers-mid-flight
 [json]: https://en.wikipedia.org/wiki/JSON
 [memleak]: https://en.wikipedia.org/wiki/Memory_leak
 [stop-the-world]: https://en.wikipedia.org/wiki/Tracing_garbage_collection#Stop-the-world_vs._incremental_vs._concurrent
