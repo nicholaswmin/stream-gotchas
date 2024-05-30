@@ -105,16 +105,6 @@ client aborts request while in-flight
 
 * Heap statistics are collected immediately following a collection/compaction.
 
-## Env info
-
-```yml
-# machine
-MacOS Sonoma @M2 24GB Air
-Node: v22.0.0
-Chrome: v124.0.6  
-Postgres: v16
-```
-
 ## Additional Reading:
 
 - [Streams Handbook][streams-handbook]
