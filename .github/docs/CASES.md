@@ -193,7 +193,7 @@ The response will still be considered `HTTP 200` yet `Incomplete`.
 
 NodeJS core provides `res.addTrailers`, [documented here][node-trailers]
 
-See [RFC9112, Section 8][rfc-trailers] for more.
+See [RFC9112, Section 7.1.2][rfc-trailers] for more.
 
 **Solution:**
 
@@ -278,4 +278,4 @@ don't `res.write` unless the previous call returned `true`
 [pg-query]: https://www.npmjs.com/package/pg-query-stream
 [req-on-err]: https://nodejs.org/en/learn/modules/anatomy-of-an-http-transaction#a-quick-thing-about-errors
 [node-trailers]: https://nodejs.org/api/http.html#responseaddtrailersheaders
-[rfc-trailers]: https://www.rfc-editor.org/rfc/rfc9112#section-8
+[rfc-trailers]: https://www.rfc-editor.org/rfc/rfc9112#section-7.1.2
