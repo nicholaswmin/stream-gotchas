@@ -1,18 +1,14 @@
 [![test-workflow][test-workflow-badge]][ci-test]
 
 # stream-repro
-List of failure cases when [streaming][streams] [JSON][json] over HTTP
-
-## Cases
-
-This is a WIP.
+List of failure cases when [streaming][streams] [JSON][json] over HTTP.
 
 A draft description of each case can be [found here][cases].  
 Each case includes tests for its failure and tests for it's solution.
 
-The suite tests each case for:
+The test suite tests each case (both failure and solution) for:
 
-- **Memory pressure and memory leaks**.
+- **Memory pressure and [memory leaks][memleak]**.
 - **Runaway queries**.
   Are there queries still running when they shouldnt?
 - **Database connection release**.
@@ -104,10 +100,6 @@ Chrome: v124.0.6
 Postgres: v16
 ```
 
-## Notes
-
-- https://stackoverflow.com/questions/41155877/node-js-passthrough-stream-not-closing-properly
-
 ## Authors
 
 @nicholaswmin
@@ -122,3 +114,4 @@ MIT License, 2024
 [oilpan]: https://v8.dev/blog/oilpan-library
 [cases]: .github/docs/CASES.md
 [json]: https://en.wikipedia.org/wiki/JSON
+[memleak]: https://en.wikipedia.org/wiki/Memory_leak
