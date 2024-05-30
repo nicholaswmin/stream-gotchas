@@ -1,11 +1,22 @@
 [![test-workflow][test-workflow-badge]][ci-test]
 
 # stream-repro
-List of failure cases when [streaming][streams] over HTTP
+List of failure cases when [streaming][streams] [JSON][json] over HTTP
 
 ## Cases
 
-This is a WIP. A draft description each cases can be [found here][cases].
+This is a WIP.
+
+A draft description of each case can be [found here][cases].  
+Each case includes tests for its failure and tests for it's solution.
+
+The suite tests each case for:
+
+- **Memory pressure and memory leaks**.
+- **Runaway queries**.
+  Are there queries still running when they shouldnt?
+- **Database connection release**.
+  Does it unnecessarily hold-on to a database connection?
 
 ## Install
 
@@ -18,8 +29,7 @@ npm i
 # spin up a PG server, then export it as DATABASE_URL
 export DATABASE_URL=postgres://postgres:123@localhost:5432/repro
 
-# create a 1-table DB with sample data
-# ~ 25k events, ~1MB total
+# create a test DB with test data
 npm run initdb
 ```
 
@@ -111,3 +121,4 @@ MIT License, 2024
 [httpie]: https://httpie.io/docs/cli/installation
 [oilpan]: https://v8.dev/blog/oilpan-library
 [cases]: .github/docs/CASES.md
+[json]: https://en.wikipedia.org/wiki/JSON
