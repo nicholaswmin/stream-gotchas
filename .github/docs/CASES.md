@@ -132,7 +132,7 @@ Example:
       .filter(stream => !stream.destroyed)
       .forEach(stream => stream.destroy())
 
-    console.error(err) 
+    console.error(err)
   }))
 
 // More error handling needed, see rest of cases
@@ -210,13 +210,37 @@ fact, this is expected behaviour.
 
   ## No compression
 
-  Userland streams are not automatically compressed by the Express compression
-  middleware.
+  Userland streams are not automatically compressed by the Express
+  compression middleware.
 
-  Dont send compressed responses to clients that don't specifically request
-  them via the `Accept-Encoding` header.
+  Additionally, avoid sending compressed responses to clients that don't
+  specifically request them via the `Accept-Encoding`.
 
   **Solution**: Compress the stream
+
+  Example:
+
+  ```js
+  app.get('/messages', async (req, res, next) => {
+    try {
+      const stream = db('messages').select('*').stream()
+      const jsonStream = stream.pipe(JSONStream.stringify())
+
+      if (req.acceptsEncodings().includes('gzip')) {
+        res.setHeader('Content-Encoding', 'gzip')
+
+        jsonStream.pipe(zlib.createGzip()).pipe(res)
+      } else {
+        jsonStream.pipe(res)
+      }
+
+      // Add error handling, see above
+      // Add Brotli compression handling if needed
+    } catch (err) {
+      next(err)
+    }
+  })
+  ```
 
   ## No backpressure handling
 
