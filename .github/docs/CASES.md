@@ -162,7 +162,7 @@ set by the `highWaterMark` of the read stream.
 - Dynamically set the `highWaterMark`; provide a test stream and test
   client reading speed before merging the actual read stream.
 
-## Attempts to send userland HTTP headers mid-flight
+## Sending HTTP headers mid-flight
 
 - Creates unnecessary errors
 
@@ -190,7 +190,7 @@ wire.
 - Not much else to do if streaming has already started. Strictly speaking, it's
   a server error anyway so a 408 is not entirely appropriate.
 
-# Superflous query-abort errors
+## Superflous query-abort errors
 
 - Creates unnecessary errors
 
@@ -208,52 +208,52 @@ fact, this is expected behaviour.
 - Check if headers were already sent before doing anything of the
   sort `res.sendStatus(4xx)`.
 
-  ## No compression
+## No compression
 
-  Userland streams are not automatically compressed by the Express
-  compression middleware.
+Userland streams are not automatically compressed by the Express
+compression middleware.
 
-  Additionally, avoid sending compressed responses to clients that don't
-  specifically request them via the `Accept-Encoding`.
+Additionally, avoid sending compressed responses to clients that don't
+specifically request them via the `Accept-Encoding`.
 
-  **Solution**: Compress the stream
+**Solution**: Compress the stream
 
-  Example:
+Example:
 
-  ```js
-  app.get('/messages', async (req, res, next) => {
-    try {
-      const stream = db('messages').select('*').stream()
-      const jsonStream = stream.pipe(JSONStream.stringify())
+```js
+app.get('/messages', async (req, res, next) => {
+  try {
+    const stream = db('messages').select('*').stream()
+    const jsonStream = stream.pipe(JSONStream.stringify())
 
-      if (req.acceptsEncodings().includes('gzip')) {
-        res.setHeader('Content-Encoding', 'gzip')
+    if (req.acceptsEncodings().includes('gzip')) {
+      res.setHeader('Content-Encoding', 'gzip')
 
-        jsonStream.pipe(zlib.createGzip()).pipe(res)
-      } else {
-        jsonStream.pipe(res)
-      }
-
-      // Add error handling, see above
-      // Add Brotli compression handling if needed
-    } catch (err) {
-      next(err)
+      jsonStream.pipe(zlib.createGzip()).pipe(res)
+    } else {
+      jsonStream.pipe(res)
     }
-  })
-  ```
 
-  ## No backpressure handling
+    // Add error handling, see above
+    // Add Brotli compression handling if needed
+  } catch (err) {
+    next(err)
+  }
+})
+```
 
-  - memory pressure
-  - memory leak
-  - DB connection not released
-  - Runaway queries
+## No backpressure handling
 
-  No point in using streams without it. It has the exact same memory profile
-  as just sending a non-streamed response, only with additional overhead
+- memory pressure
+- memory leak
+- DB connection not released
+- Runaway queries
 
-  **Solution**: Either use `pipe` which handles backpressure automatically or
-  don't `res.write` unless the previous call returned `true`
+No point in using streams without it. It has the exact same memory profile
+as just sending a non-streamed response, only with additional overhead
+
+**Solution**: Either use `pipe` which handles backpressure automatically or
+don't `res.write` unless the previous call returned `true`
 
 
 ## Authors
