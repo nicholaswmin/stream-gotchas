@@ -52,10 +52,20 @@ Run the test cases:
 npm test
 ```
 
-### Plot the Garbage Collector compaction cycles
+### Plot the Garbage Collector
 
-Each case tests the compaction cycles of [Oilpan][oilpan].  
-Heap statistics are collected immediately following a collection/compaction.
+The tests attempt to stress an endpoint so that [Oilpan][oilpan],
+the garbage collector, kicks in.
+
+As the heap limits are reached, Oilpan will start panicking and run ever more
+frequent compaction cycles.
+
+Because it's a [stop-the-world][stop-the-world] type of GC,
+it tries to avoid unnecessarily running unless it believes it's about to be
+OOM-ed.
+
+Heap compaction is a process based on heuristics so sometimes it's best to
+view it visually.
 
 To plot the heap while running the tests:
 
@@ -93,14 +103,7 @@ client aborts request while in-flight
 
 ```
 
-## Run server
-
-Not much point in this but you can view the streams
-in the browser itself
-
-```bash
-npm start
-```
+* Heap statistics are collected immediately following a collection/compaction.
 
 ## Env info
 
@@ -130,3 +133,4 @@ MIT License, 2024
 [cases-ex-2]: .github/docs/CASES.md#processing-streams-error-out-mid-flight
 [json]: https://en.wikipedia.org/wiki/JSON
 [memleak]: https://en.wikipedia.org/wiki/Memory_leak
+[stw]: https://en.wikipedia.org/wiki/Tracing_garbage_collection#Stop-the-world_vs._incremental_vs._concurrent
