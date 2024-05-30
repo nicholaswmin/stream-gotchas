@@ -1,6 +1,6 @@
 ## Failure Cases
 
-The cases use [`pg-query-stream`][pg-query] as an example database driver -  
+The cases use [pg-query-stream][pg-query] as an example database driver -  
 these cases will apply to most, if not all, popular drivers.
 
 This won't cut it in a production environment:
@@ -27,8 +27,8 @@ Effects:
 
 **Solution**:
 
-- Handle `req.on(error, fn)` event. Destroy all streams.
-- Cancel pending queries
+- Handle [Request: 'error'][req-on-err] event. Destroy all streams.
+- Cancel any pending queries
 - Manually release the db connection
 
 Example:
@@ -38,11 +38,7 @@ app.get('/messages', async (req, res, next) => {
   try {
     const stringifier = JSONStream.stringify()
     const conn = await db.client.acquireConnection()
-    const stream = db('messages')
-      .select('*')
-      .connection(conn)
-      .comment(req.query.comment || '')
-      .stream()
+    const stream = db('messages').select('*').connection(conn).stream()
 
     req.on('error', async err => {
       if (err.message?.includes('abort')) {
@@ -59,9 +55,7 @@ app.get('/messages', async (req, res, next) => {
 
     // More error handling needed, see rest of cases
 
-    stream
-      .pipe(stringifier)
-      .pipe(res)
+    stream.pipe(stringifier).pipe(res)
   } catch (err) {
     next(err)
   }
@@ -72,12 +66,10 @@ app.get('/messages', async (req, res, next) => {
 
 Effects:
 
-- process crash even with `try/catch`
-- HTTP request pending indefinetely
-- memory leak even if req. abort is handled
-- DB connection not released
-
-Requires small `statement_timeout` to reproduce (`10ms` is enough to fetch `10MB`)
+- Process crash even with `try/catch`
+- HTTP request pending indefinitely
+- Memory leaks (even if req. abort is handled)
+- DB connections are not released
 
 **Solution**:
 
@@ -92,19 +84,15 @@ Examples:
 app.get('/messages', async (req, res, next) => {
   try {
     const stringifier = JSONStream.stringify()
-    const delayer = delay()
     const conn = await db.client.acquireConnection()
-    const stream = db('messages')
-      .select('*')
-      .connection(conn)
-      .comment(req.query.comment || '')
-      .stream()
+    const stream = db('messages').select('*').connection(conn).stream()
 
     stream.on('error', err => {
       if (err.code === '57014')
-        res.status(408).send('Timed out')
+        if (!res.headersSent)
+          res.status(408).send('Timed out')
 
-      ;[req, stream, stringifier, delayer, res]
+      ;[req, stream, stringifier, res]
         .forEach(stream => stream.destroy())
 
       db.client.releaseConnection(conn)
@@ -112,10 +100,7 @@ app.get('/messages', async (req, res, next) => {
 
     // More error handling needed, see rest of cases
 
-    stream
-      .pipe(stringifier)
-      .pipe(delayer)
-      .pipe(res)
+    stream.pipe(stringifier).pipe(res)
   } catch (err) {
     next(err)
   }
@@ -221,7 +206,7 @@ fact, this is expected behaviour.
   - memory pressure
   - memory leak
   - DB connection not released
-  - Errant queries
+  - Runaway queries
 
   No point in using streams without it. It has the exact same memory profile
   as just sending a non-streamed response, only with additional overhead
@@ -234,3 +219,4 @@ fact, this is expected behaviour.
 
 [@nicholaswmin][https://github.com/nicholaswmin]
 [pg-query]: https://www.npmjs.com/package/pg-query-stream
+[req-on-err]: https://nodejs.org/en/learn/modules/anatomy-of-an-http-transaction#a-quick-thing-about-errors

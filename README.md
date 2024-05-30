@@ -1,7 +1,7 @@
 [![test-workflow][test-workflow-badge]][ci-test]
 
 # stream-repro
-List of failure cases when [streaming][streams] [JSON][json] over HTTP.
+List of corner/edge cases when [streaming][streams] [JSON][json] over HTTP.
 
 A draft description of each case can be [found here][cases].  
 Each case includes tests for its failure and tests for it's solution.
@@ -19,11 +19,11 @@ The test suite tests each case (both failure and solution) for:
 git clone, then:
 
 ```bash
+# Run a local Postgres server, then:
+export DATABASE_URL=postgres://postgres:123@localhost:5432/repro
+
 # install
 npm i
-
-# spin up a PG server, then export it as DATABASE_URL
-export DATABASE_URL=postgres://postgres:123@localhost:5432/repro
 
 # create a test DB with test data
 npm run initdb
