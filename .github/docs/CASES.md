@@ -1,35 +1,29 @@
 ## Failure Cases
 
-> @nicholaswmin
+The cases use [`pg-query-stream`][pg-query] as an example database driver -  
+these cases will apply to most, if not all, popular drivers.
 
-## No compression
+This won't cut it in a production environment:
 
-Userland streams are not automatically compressed by the Express compression
-middleware.
+```js
+app.get('/messages', (req, res, next) => {
+  try {
+    db.select('*').from('messages').stream().pipe(res)
+  } catch (err) {
+    next(err)
+  }
+})
+```
 
-Dont send compressed responses to clients that don't specifically request
-them via the `Accept-Encoding` header.
+because it doesn't handle the following:
 
-**Solution**: Compress the stream
+## User aborts the request mid-flight
 
-## No backpressure handling
+Effects:
 
-- memory pressure
-- memory leak
+- Memory leaks
 - DB connection not released
-- Errant queries
-
-No point in using streams without it. It has the exact same memory profile
-as just sending a non-streamed response, only with additional overhead
-
-**Solution**: Either use `pipe` which handles backpressure automatically or
-don't `res.write` unless the previous call returned `true`
-
-## No handling of request abort
-
-- memory leak
-- DB connection not released
-- Errant queries
+- Runaway queries
 
 **Solution**:
 
@@ -37,7 +31,46 @@ don't `res.write` unless the previous call returned `true`
 - Cancel pending queries
 - Manually release the db connection
 
-## No handling of datastream error
+Example:
+
+```js
+app.get('/messages', async (req, res, next) => {
+  try {
+    const stringifier = JSONStream.stringify()
+    const conn = await db.client.acquireConnection()
+    const stream = db('messages')
+      .select('*')
+      .connection(conn)
+      .comment(req.query.comment || '')
+      .stream()
+
+    req.on('error', async err => {
+      if (err.message?.includes('abort')) {
+        ;[req, stream, stringifier, res]
+          .forEach(stream => stream.destroy())
+
+      if (stream.readable)
+        await db.raw(`SELECT pg_cancel_backend(${conn.processID});`)
+          .timeout(5000, { cancel: false })
+          .then(res => res.rowCount || console.warn('statement not found'))
+          .then(() => db.client.releaseConnection(conn))
+      }
+    })
+
+    // More error handling needed, see rest of cases
+
+    stream
+      .pipe(stringifier)
+      .pipe(res)
+  } catch (err) {
+    next(err)
+  }
+})
+```
+
+## Query stream errors out mid-flight
+
+Effects:
 
 - process crash even with `try/catch`
 - HTTP request pending indefinetely
@@ -53,12 +86,43 @@ Requires small `statement_timeout` to reproduce (`10ms` is enough to fetch `10MB
 - Manually release the db connection
 - Enforce request timeouts as an additional guard
 
-Notes:
+Examples:
 
-- db conn is released in this case
-- query might be errant depending on the driver/database
+```js
+app.get('/messages', async (req, res, next) => {
+  try {
+    const stringifier = JSONStream.stringify()
+    const delayer = delay()
+    const conn = await db.client.acquireConnection()
+    const stream = db('messages')
+      .select('*')
+      .connection(conn)
+      .comment(req.query.comment || '')
+      .stream()
 
-## No handling of any stream error
+    stream.on('error', err => {
+      if (err.code === '57014')
+        res.status(408).send('Timed out')
+
+      ;[req, stream, stringifier, delayer, res]
+        .forEach(stream => stream.destroy())
+
+      db.client.releaseConnection(conn)
+    })
+
+    // More error handling needed, see rest of cases
+
+    stream
+      .pipe(stringifier)
+      .pipe(delayer)
+      .pipe(res)
+  } catch (err) {
+    next(err)
+  }
+})
+```
+
+# Processing streams error out mid-flight
 
 - process crash even with try/catch
 - memory leak
@@ -72,9 +136,10 @@ Notes:
 - Manually release the connection
 - Enforce request timeouts as an additional guard
 
-## Slow client connections
+## Slow user connections
 
-- process crash even with try/catch
+Effects:
+
 - memory exhaustion
 
 Streams are memory efficient because they don't buffer the entire response.  
@@ -95,7 +160,7 @@ set by the `highWaterMark` of the read stream.
 - Dynamically set the `highWaterMark`; provide a test stream and test
   client reading speed before merging the actual read stream.
 
-# Sending HTTP status while in-flight
+## Attempts to send userland HTTP headers mid-flight
 
 - Creates unnecessary errors
 
@@ -140,3 +205,32 @@ fact, this is expected behaviour.
   instead of `stderr` with a message indicating the cancellation reason.
 - Check if headers were already sent before doing anything of the
   sort `res.sendStatus(4xx)`.
+
+  ## No compression
+
+  Userland streams are not automatically compressed by the Express compression
+  middleware.
+
+  Dont send compressed responses to clients that don't specifically request
+  them via the `Accept-Encoding` header.
+
+  **Solution**: Compress the stream
+
+  ## No backpressure handling
+
+  - memory pressure
+  - memory leak
+  - DB connection not released
+  - Errant queries
+
+  No point in using streams without it. It has the exact same memory profile
+  as just sending a non-streamed response, only with additional overhead
+
+  **Solution**: Either use `pipe` which handles backpressure automatically or
+  don't `res.write` unless the previous call returned `true`
+
+
+## Authors
+
+[@nicholaswmin][https://github.com/nicholaswmin]
+[pg-query]: https://www.npmjs.com/package/pg-query-stream
