@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node --max-old-space-size=500 --watch app.js",
     "start-dev": "npm start",
-    "test": "npx mocha test/**.spec.js test/utils/**/test/**.spec.js",
+    "test": "npx mocha",
     "pretest": "npm run initdb",
     "initdb": "node initdb.js"
   },
@@ -15,7 +15,10 @@
     "bail": true,
     "check-leaks": true,
     "slow": 6000,
-    "colors": true
+    "colors": true,
+    "spec": [
+      "test/*/*.spec.js"
+    ]
   },
   "engines": {
     "npm": "10.x",
@@ -51,6 +54,7 @@
     "asciichart": "^1.5.25",
     "chai": "^4.4.1",
     "chai-http": "^4.4.0",
+    "execa": "^9.1.0",
     "mocha": "^10.4.0",
     "prettyoutput": "^1.2.0",
     "single-line-log": "^1.1.2",

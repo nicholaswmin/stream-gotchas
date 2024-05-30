@@ -5,6 +5,7 @@ import JSONStream from 'JSONStream'
 import knex from 'knex'
 
 import Memstat from './test/utils/memstat/watch.js'
+import delay from './test/utils/delay/index.js'
 
 const app = express()
 const db = knex({
@@ -73,15 +74,49 @@ app.get('/gzipped', async (req, res, next) => {
 
 app.get('/client-abort', async (req, res, next) => {
   try {
-    const stream = db('await pg_sleep(3)').select('*').stream()
-    const gzip = zlib.createGzip()
+    const stream = db('messages')
+      .select('*')
+      .comment(req.query.comment || '')
+      .stream()
 
-    stream.pipe(JSONStream.stringify()).pipe(gzip).pipe(res)
+    stream
+      .pipe(JSONStream.stringify())
+      .pipe(delay())
+      .pipe(res)
+  } catch (err) {
+    next(err)
+  }
+})
 
-    stream.on('error', err => {
-      stream.destroy()
-      next(err)
+app.get('/client-abort/fixed', async (req, res, next) => {
+  try {
+    const { comment } = req.query
+    const stringifier = JSONStream.stringify()
+    const delayer = delay()
+    const conn = await db.client.acquireConnection()
+    const stream = db('messages')
+      .select('*')
+      .connection(conn)
+      .comment(comment || '')
+      .stream()
+
+    req.on('error', async err => {
+      if (err.message?.includes('abort')) {
+        ;[req, stream, stringifier, delayer, res]
+          .forEach(stream => stream.destroy())
+
+      if (stream.readable)
+        await db.raw(`SELECT pg_cancel_backend(${conn.processID});`)
+          .timeout(5000, { cancel: false })
+          .then(res => res.rowCount || console.warn('statement not found'))
+          .then(() => db.client.releaseConnection(connection))
+      }
     })
+
+    stream
+      .pipe(stringifier)
+      .pipe(delayer)
+      .pipe(res)
   } catch (err) {
     next(err)
   }
@@ -112,6 +147,8 @@ app.use((err, req, res, next) => {
   res.status(500).send('oops! server error!')
 })
 
-export default app.listen(process.env.PORT || 5020, function() {
+const server = app.listen(process.env.PORT || 5020, function() {
   console.log('Listening on: %s', this.address().port)
 })
+
+export { db as db, server as server }

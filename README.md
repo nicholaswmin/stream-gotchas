@@ -43,6 +43,7 @@ npm start
 MacOS Sonoma @M2 24GB Air
 Node: v22.0.0
 Chrome: v124.0.6  
+Postgres: v16
 ```
 
 ## Notes

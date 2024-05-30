@@ -37,7 +37,7 @@ await user.schema.createTable('messages', t => {
 })
 // 25000 * `{ text: '7306668' }` totals 1 MB; this is tested in tests
 const messageSizeKB = 50
-await user.batchInsert('messages', Array(2500).fill({
+await user.batchInsert('messages', Array(500).fill({
   text: 'bar'.repeat(350 * messageSizeKB)
 }))
 await user.destroy()
