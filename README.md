@@ -1,6 +1,6 @@
 [![test-workflow][test-workflow-badge]][ci-test]
 
-# stream-repro
+# stream-gotchas
 List of corner/edge cases when [streaming JSON][streaming] over HTTP,  
 i.e when doing something like:
 
