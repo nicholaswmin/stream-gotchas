@@ -119,7 +119,7 @@ Postgres: v16
 
 - [Streams Handbook][streams-handbook]
 - [Anatomy of an HTTP transaction][anatomy-http]
-- [Stream: NodeJS reference]
+- [Stream: NodeJS reference][stream-node-ref]
 
 ## Authors
 
@@ -142,4 +142,4 @@ MIT License, 2024
 [stop-the-world]: https://en.wikipedia.org/wiki/Tracing_garbage_collection#Stop-the-world_vs._incremental_vs._concurrent
 [anatomy-http]: https://nodejs.org/en/learn/modules/anatomy-of-an-http-transaction
 [streams-handbook]: https://github.com/JasonGhent/stream-handbook-epub
-[streams-node]: https://nodejs.org/api/stream.html
+[stream-node-ref]: https://nodejs.org/api/stream.html
