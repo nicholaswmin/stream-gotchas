@@ -158,8 +158,9 @@ app.get('/query-error', async (req, res, next) => {
       .comment(req.query.comment || '')
       .stream()
 
-    stream.on('error', err => {
-      // console.log(err)
+    stream.on('error', function() {
+      // not really handled, but at least listening to it
+      // so it doesn't crash the process
     })
 
     stream
@@ -199,14 +200,73 @@ app.get('/query-error/fixed', async (req, res, next) => {
   }
 })
 
+app.get('/stream-error', async (req, res, next) => {
+  try {
+    const stringifier = JSONStream.stringify()
+    const gzip = zlib.createGzip()
+    const delayer = delay()
+    const stream = db('messages')
+      .select('*')
+      .comment(req.query.comment || '')
+      .stream()
+
+    gzip.on('error', function() {
+      // not really handled, but at least listening to it
+      // so it doesn't crash the process
+    })
+
+    stream
+      .pipe(JSONStream.stringify())
+      .pipe(gzip)
+      .pipe(delay())
+      .pipe(res)
+
+    setTimeout(() =>
+      gzip.emit('error', new Error('simulated gzip error')), 50)
+  } catch (err) {
+    next(err)
+  }
+})
+
+app.get('/stream-error/fixed', async (req, res, next) => {
+  try {
+    const stringifier = JSONStream.stringify()
+    const gzip = zlib.createGzip()
+    const delayer = delay()
+    const stream = db('messages')
+      .select('*')
+      .comment(req.query.comment || '')
+      .stream()
+
+    ;[stream, stringifier, gzip, delayer, res]
+      .forEach(stream => stream.on('error', err => {
+        ;[req, stream, stringifier, gzip, res] // add more streams if necessary
+          .filter(stream => !stream.destroyed)
+          .forEach(stream => stream.destroy())
+
+        console.error(err)
+      }))
+
+    stream
+      .pipe(stringifier)
+      .pipe(gzip)
+      .pipe(delayer)
+      .pipe(res)
+
+    setTimeout(() =>
+      gzip.emit('error', new Error('simulated gzip error')), 50)
+  } catch (err) {
+    next(err)
+  }
+})
+
 app.use((err, req, res, next) => {
   console.error(err)
   res.status(500).send('oops! server error!')
 })
 
 const server = app.listen(process.env.PORT || 5020, function() {
-  if (process.env.NODE_ENV !== 'test')
-    console.log('Listening on: %s', this.address().port)
+  console.log('Listening on: %s', this.address().port)
 })
 
 export { db as db, server as server }

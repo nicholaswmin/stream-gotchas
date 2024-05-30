@@ -16,6 +16,7 @@
     "check-leaks": true,
     "slow": 6000,
     "colors": true,
+    "require": "mocha-suppress-logs",
     "global": [
       "statement_timeout"
     ],
@@ -58,6 +59,7 @@
     "chai-http": "^4.4.0",
     "execa": "^9.1.0",
     "mocha": "^10.4.0",
+    "mocha-suppress-logs": "^0.5.1",
     "prettyoutput": "^1.2.0",
     "single-line-log": "^1.1.2",
     "strip-ansi": "^7.1.0",

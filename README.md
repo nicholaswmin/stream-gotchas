@@ -57,8 +57,8 @@ npm test
 The tests attempt to stress an endpoint so that [Oilpan][oilpan],
 the garbage collector, kicks in.
 
-As the heap limits are reached, Oilpan will start panicking and run ever more
-frequent compaction cycles.
+As the heap limits are reached, Oilpan will start freaking out and run ever
+more frequent compaction cycles.
 
 Because it's a [stop-the-world][stop-the-world] type of GC,
 it tries to avoid unnecessarily running unless it believes it's about to be

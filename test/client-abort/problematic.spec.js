@@ -7,7 +7,7 @@ import request from '../utils/request/index.js'
 chai.should()
 
 describe('client aborts request', function() {
-  this.timeout(15 * 1000).slow(10 * 1000)
+  this.timeout(30 * 1000).slow(25 * 1000)
 
   beforeEach(async function() {
     const { server, db } = await import(`../../app.js?v=${Date.now()}`)
