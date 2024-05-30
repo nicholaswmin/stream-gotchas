@@ -1,11 +1,12 @@
 import knex from 'knex'
 
-const { DATABASE_URL } = process.env
+const DATABASE_URL = process.env.DATABASE_URL || (() => {
+  throw new Error('DATABASE_URL env. var is required')
+})()
 const name = DATABASE_URL.split('/')[3]
 const isLocalDB = DATABASE_URL.includes('@localhost')
 const adminURL = DATABASE_URL.replace(name, '')
 const userURL = DATABASE_URL
-const sslOpts = isLocalDB ? false : { rejectUnauthorized: false }
 
 if (isLocalDB) {
   const admin = knex({
@@ -35,8 +36,9 @@ await user.schema.createTable('messages', t => {
   t.text('text')
 })
 // 25000 * `{ text: '7306668' }` totals 1 MB; this is tested in tests
-await user.batchInsert('messages', Array(25000).fill({
-  text: Math.random().toString().substring(2,9)
+const messageSizeKB = 50
+await user.batchInsert('messages', Array(500).fill({
+  text: 'bar'.repeat(350 * messageSizeKB)
 }))
 await user.destroy()
 

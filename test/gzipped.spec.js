@@ -1,74 +1,70 @@
-import { pipeline } from 'node:stream/promises'
-import { PassThrough } from 'node:stream'
 import chai from 'chai'
 import chaiHttp from 'chai-http'
-import binaryParser from 'superagent-binary-parser'
 
-import chaiHttpRaw from './chai-http-raw/index.js'
+import shared from './shared.specs.js'
+import get from './utils/http-get/index.js'
 import app from '../app.js'
 
 chai.should()
 chai.use(chaiHttp)
-chai.use(chaiHttpRaw)
 
 describe('GET /gzipped', function() {
-  it('responds with status=200', async function () {
-    const res = await chai.request(app)
-      .get('/gzipped')
+  const url = '/gzipped'
 
-    res.status.should.equal(200)
-  })
+  shared.it.status200(url)
+  shared.it.chunkedHeaders(url)
 
-  describe('Has correct headers', () => {
-    it('has Transfer-Encoding : chunked', async function () {
+  describe('client accepts compressed responses', function() {
+    it('marks response as compressed', async function () {
       const res = await chai.request(app)
-        .get('/uncompressed')
+        .get(url)
 
-      res.should.have.header('Transfer-Encoding' , 'chunked')
+      res.should.have.header('Content-Encoding', 'gzip')
     })
 
-    it('has Content-Encoding : gzip', async function () {
-      const res = await chai.request(app)
-        .get('/uncompressed')
+    it('sends ~ 190 KB of data', async function () {
+      const { server, res } = await get(app, url,  { 'accept-encoding': 'gzip' })
 
-      res.headers.should.not.include.property('Content-Encoding')
-      res.headers.should.not.include.property('content-encoding')
-    })
-  })
-
-  it('sends ~ 60 KB of data', function () {
-    const counter = new PassThrough({
-      construct(callback) {
-        callback()
-        this.bytes = 0
-      },
-      transform(chunk, encoding, callback) {
-        callback()
-        this.bytes += Buffer.byteLength(chunk)
-      },
-      final(callback) {
-        callback()
-      }
-    })
-
-    return chai.requestRaw(app)
-      .get('/gzipped')
-      .then(({ res, server }) => {
-        return pipeline(res, counter).then(() => {
-          counter.bytes.should.be.within(50000, 70000)
+      return new Promise(resolve => {
+        let bytes = 0
+        res.on('data', data => bytes += Buffer.byteLength(data))
+        res.on('end', () => {
+          bytes.should.be.within(150000, 200000)
 
           server.close()
+          resolve()
         })
       })
+    })
+
+    shared.it.sendsParseableData(url)
   })
 
-  it('sends data that parses to 25000 messages', async function () {
-    const messages = await chai.request(app)
-      .get('/uncompressed')
-      .parse(binaryParser).buffer()
-      .then(res => JSON.parse((new TextDecoder('UTF-8'))
-      .decode(res.body)))
+  describe('client does not accept compressed responses', function() {
+    it('marks the response as uncompressed', async function () {
+      const res = await chai.request(app).get(url)
+        .set('accept-encoding', 'identity')
 
-    messages.should.be.an('Array').with.length(25000)
+      res.should.not.have.header('Content-Encoding')
+    })
+
+    it('sends ~ 135 MB of data', async function () {
+      const { server, res } = await get(app, url, {
+        'accept-encoding': 'identity'
+      })
+
+      return new Promise(resolve => {
+        let bytes = 0
+        res.on('data', data => bytes += Buffer.byteLength(data))
+        res.on('end', () => {
+          bytes.should.be.within(120000000, 150000000)
+
+          server.close()
+          resolve()
+        })
+      })
+    })
+
+    shared.it.sendsParseableData(url)
   })
 })
