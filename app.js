@@ -30,16 +30,6 @@ const db = knex({
   }
 })
 
-app.set('view engine', 'pug')
-
-app.get('/', (req, res) => {
-  res.render('index', {
-    routes: listroutes(app)
-      .map(route =>
-        ({ ...route, path: route.path }))
-  })
-})
-
 app.get('/uncompressed', async (req, res, next) => {
   try {
     const stream = db('messages').select('*').stream()
