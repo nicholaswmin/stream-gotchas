@@ -129,7 +129,7 @@ MIT License, 2024
 [httpie]: https://httpie.io/docs/cli/installation
 [oilpan]: https://v8.dev/blog/oilpan-library
 [cases]: .github/docs/CASES.md#user-aborts-request-mid-flight
-[cases-ex-1]: .github/docs/CASES.md#user-aborts-request-mid-flight
+[cases-ex-1]: .github/docs/CASES.md#user-aborts-the-request-mid-flight
 [cases-ex-2]: .github/docs/CASES.md#processing-streams-error-out-mid-flight
 [json]: https://en.wikipedia.org/wiki/JSON
 [memleak]: https://en.wikipedia.org/wiki/Memory_leak
