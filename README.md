@@ -133,4 +133,4 @@ MIT License, 2024
 [cases-ex-2]: .github/docs/CASES.md#processing-streams-error-out-mid-flight
 [json]: https://en.wikipedia.org/wiki/JSON
 [memleak]: https://en.wikipedia.org/wiki/Memory_leak
-[stw]: https://en.wikipedia.org/wiki/Tracing_garbage_collection#Stop-the-world_vs._incremental_vs._concurrent
+[stop-the-world]: https://en.wikipedia.org/wiki/Tracing_garbage_collection#Stop-the-world_vs._incremental_vs._concurrent
