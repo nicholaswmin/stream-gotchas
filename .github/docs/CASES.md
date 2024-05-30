@@ -168,8 +168,8 @@ set by the `highWaterMark` of the read stream.
 
 Streaming responses in HTTP 1.1 require the headers to be set upfront.
 
-You might want to set a friendlier, HTTP 408 status code if the
-`statement_timeout` has elapsed.
+You might want to set a friendlier, HTTP 408 status code if i.e the database
+threw a `statement_timeout`.
 
 This might be possible depending on whether the DB has found results and is
 already streaming them down the wire.
@@ -183,13 +183,13 @@ The only possible way to set headers is if the query has not started streaming
 yet (because it's still querying the DB) and not a single byte made it down the
 wire.
 
-If streaming has started but you *must* send metadata can you consider
+If streaming has started but you *must* send metadata, you can consider
 using HTTP Header Trailers. This won't have any effect on any reasonable client
 - trailers are ignored when it comes to determining response status.
 
-However, if you control the client, you might be able to use them for
+However, if you control the client, you might be able to use them for custom
 error handling. This doesn't address any of the concerns of this issue.
-The response will still be considered Incomplete.
+The response will still be considered `HTTP 200` yet `Incomplete`.
 
 NodeJS core provides `res.addTrailers`, [documented here][node-trailers]
 
