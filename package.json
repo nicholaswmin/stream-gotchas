@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node --max-old-space-size=500 --watch app.js",
     "start-dev": "npm start",
-    "test": "npx mocha",
+    "test": "NODE_ENV=test npx mocha",
     "pretest": "npm run initdb",
     "initdb": "node initdb.js"
   },
@@ -16,6 +16,7 @@
     "check-leaks": true,
     "slow": 6000,
     "colors": true,
+    "global": ["statement_timeout"],
     "spec": [
       "test/*/*.spec.js"
     ]

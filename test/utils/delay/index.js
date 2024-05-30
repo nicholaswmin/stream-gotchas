@@ -5,6 +5,7 @@
 import { PassThrough } from 'node:stream'
 
 export default opts => new PassThrough({
+  ...opts,
   construct(cb) {
     cb()
   },

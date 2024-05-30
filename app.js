@@ -1,5 +1,6 @@
 import zlib from 'node:zlib'
 import express from 'express'
+import { setTimeout as wait } from 'node:timers/promises'
 import listroutes from 'express-list-routes'
 import JSONStream from 'JSONStream'
 import knex from 'knex'
@@ -20,10 +21,12 @@ const db = knex({
   pool: {
     min: 2,
     max: 50,
-    afterCreate: (conn, done) => conn.query(
-      `SET statement_timeout=10000000;`,
-      err => done(err, conn)
-    )
+    afterCreate: (conn, done) => {
+      return conn.query(
+       `SET statement_timeout=${global.statement_timeout || 1000000};`,
+       err => done(err, conn)
+     )
+    }
   }
 })
 
@@ -72,6 +75,41 @@ app.get('/gzipped', async (req, res, next) => {
   }
 })
 
+app.get('/backpressure', async (req, res, next) => {
+  try {
+    const stream = db('messages')
+      .select('*')
+      .comment(req.query.comment || '')
+      .stream()
+      .pipe(JSONStream.stringify())
+      .pipe(delay())
+      .on('data', function(chunk) {
+        res.write(chunk)
+      })
+      .on('end', function() {
+        res.end()
+      })
+  } catch (err) {
+    next(err)
+  }
+})
+
+app.get('/backpressure/fixed', async (req, res, next) => {
+  try {
+    let shouldWrite = true
+
+    const stream = db('messages')
+      .select('*')
+      .comment(req.query.comment || '')
+      .stream()
+      .pipe(JSONStream.stringify())
+      .pipe(delay())
+      .pipe(res)
+  } catch (err) {
+    next(err)
+  }
+})
+
 app.get('/client-abort', async (req, res, next) => {
   try {
     const stream = db('messages')
@@ -90,14 +128,13 @@ app.get('/client-abort', async (req, res, next) => {
 
 app.get('/client-abort/fixed', async (req, res, next) => {
   try {
-    const { comment } = req.query
     const stringifier = JSONStream.stringify()
     const delayer = delay()
     const conn = await db.client.acquireConnection()
     const stream = db('messages')
       .select('*')
       .connection(conn)
-      .comment(comment || '')
+      .comment(req.query.comment || '')
       .stream()
 
     req.on('error', async err => {
@@ -109,7 +146,7 @@ app.get('/client-abort/fixed', async (req, res, next) => {
         await db.raw(`SELECT pg_cancel_backend(${conn.processID});`)
           .timeout(5000, { cancel: false })
           .then(res => res.rowCount || console.warn('statement not found'))
-          .then(() => db.client.releaseConnection(connection))
+          .then(() => db.client.releaseConnection(conn))
       }
     })
 
@@ -124,19 +161,49 @@ app.get('/client-abort/fixed', async (req, res, next) => {
 
 app.get('/query-error', async (req, res, next) => {
   try {
-    const connection = await db.client.acquireConnection()
-    const stream = db('pg_sleep').select('*').connection(connection).stream()
-    const gzip = zlib.createGzip()
-
-    stream.pipe(JSONStream.stringify()).pipe(gzip).pipe(res)
+    const conn = await db.client.acquireConnection()
+    const stream = db('messages')
+      .select('*')
+      .connection(conn)
+      .comment(req.query.comment || '')
+      .stream()
 
     stream.on('error', err => {
-      stream.destroy()
-      next(err)
+      // console.log(err)
     })
 
-    await db.raw(`SELECT pg_terminate_backend(${connection.processID});`)
-    await db.client.releaseConnection()
+    stream
+      .pipe(JSONStream.stringify())
+      .pipe(delay())
+      .pipe(res)
+  } catch (err) {
+    next(err)
+  }
+})
+
+app.get('/query-error/fixed', async (req, res, next) => {
+  try {
+    const stringifier = JSONStream.stringify()
+    const delayer = delay()
+    const conn = await db.client.acquireConnection()
+    const stream = db.raw(`SELECT pg_sleep(10)`)
+      .connection(conn)
+      .stream()
+
+    stream.on('error', err => {
+      if (err.code === '57014')
+        res.status(408).send('Timed out')
+
+      ;[req, stream, stringifier, delayer, res]
+        .forEach(stream => stream.destroy())
+
+      db.client.releaseConnection(conn)
+    })
+
+    stream
+      .pipe(stringifier)
+      .pipe(delayer)
+      .pipe(res)
   } catch (err) {
     next(err)
   }
@@ -148,7 +215,8 @@ app.use((err, req, res, next) => {
 })
 
 const server = app.listen(process.env.PORT || 5020, function() {
-  console.log('Listening on: %s', this.address().port)
+  if (process.env.NODE_ENV !== 'test')
+    console.log('Listening on: %s', this.address().port)
 })
 
 export { db as db, server as server }

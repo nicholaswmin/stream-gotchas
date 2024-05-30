@@ -1,14 +1,24 @@
-import chai from 'chai'
+import { setTimeout as wait } from 'node:timers/promises'
 import { execa } from 'execa'
-
+import chai from 'chai'
 import Memstat from '../utils/memstat/index.js'
 import request from '../utils/request/index.js'
-import { server, db } from '../../app.js'
 
 chai.should()
 
 describe('client aborts request', function() {
   this.timeout(15 * 1000).slow(10 * 1000)
+
+  beforeEach(async function() {
+    const { server, db } = await import(`../../app.js?v=${Date.now()}`)
+
+    this.server = server
+    this.db = db
+  })
+
+  afterEach(function() {
+    this.server.close()
+  })
 
   describe('when we send one request', function() {
     it('sends an HTTP 200 and a 20 MB response', async function () {
@@ -23,6 +33,14 @@ describe('client aborts request', function() {
   describe('when we send a lot of requests', function() {
 
     describe('without handling request error aborted event', function() {
+      it('does not release database connections', async function () {
+        await request('localhost:5020/client-abort')
+          .thenAbort({ times: 10 })
+
+        await wait(500)
+
+        this.db.client.pool.numUsed().should.be.above(8)
+      })
 
       it('exhibits memory spikes that persist after request', async function () {
         this.memstat = new Memstat({
@@ -32,28 +50,23 @@ describe('client aborts request', function() {
         this.memstat.start()
 
         await request('localhost:5020/client-abort')
-          .thenAbort({ times: 5 })
+          .thenAbort({ times: 10 })
 
         const mem = await this.memstat.stop()
 
         mem.leaks.should.be.true
       })
 
-      it('does not release database connections', async function () {
-        await request('localhost:5020/client-abort')
-          .thenAbort({ times: 5 })
-
-        db.client.pool.numUsed().should.be.above(5)
-      })
-
       it('has queries still pending', async function () {
-        await request('localhost:5020/client-abort?comment=query_leak')
-          .thenAbort({ times: 5, afterMs: 500 })
+        const rand = Math.random()
 
-        return db.raw(`SELECT * FROM pg_stat_activity WHERE backend_type = 'client backend';`)
+        await request(`localhost:5020/client-abort?comment=${rand}`)
+          .thenAbort({ times: 10, afterMs: 500 })
+
+        return this.db.raw(`SELECT * FROM pg_stat_activity;`)
           .then(res => res.rows
-            .filter(row => row.query.includes('/* query_leak */')))
-          .then(res => res.should.have.length.above(0))
+            .filter(row => row.query.includes(`/* ${rand} */`)))
+            .then(res => res.should.have.length.above(0))
       })
     })
   })

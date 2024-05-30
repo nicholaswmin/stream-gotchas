@@ -1,7 +1,34 @@
-// HTTPie helpers
+// Utility methods for testing, uses httpie
+// @nicholaswmin
+
+import { setTimeout as wait } from 'node:timers/promises'
 import { execa } from 'execa'
 
-const normal = async url => {
+const normal = async (url, { resolveAfterMs = false } = {}) => {
+  if (resolveAfterMs) {
+    if (isNaN(resolveAfterMs) || resolveAfterMs < 0 || resolveAfterMs > 2000000)
+      throw new Error('"resolveAfterMs" must be a number 1 - 2000000')
+
+    try {
+      const ctrl = new AbortController()
+      const timer = setTimeout(() => ctrl.abort(), resolveAfterMs)
+
+      const res = await execa({
+        cancelSignal: ctrl.signal
+      })`http ${url} --ignore-stdin`
+
+      clearTimeout(timer)
+
+      return res
+    } catch (err)  {
+      if (!err.isCanceled)
+        throw err
+
+      return { resolvedAfterMs: true }
+    }
+  }
+
+
   return execa`http ${url} --ignore-stdin`
 }
 
@@ -44,8 +71,9 @@ const thenAbort = async (url, { times = 1, afterMs = 0 }) => {
 
 const request = url => {
   return {
-    normal: () => normal(url),
-    thenAbort: options => thenAbort(url, options)
+    normal: options => normal(url, options),
+    thenAbort: options => thenAbort(url, options),
+    times: options => times(url, options)
   }
 }
 
