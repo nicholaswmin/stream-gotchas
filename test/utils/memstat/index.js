@@ -102,7 +102,7 @@ export default class Memstat {
     return {
       leaks: this.leaks,
       stats: this.getStats(),
-      plot: this.plot.generate({ colors: [] })
+      plot: this.watch || this.drawPlot ?  this.plot.generate() : null
     }
   }
 }

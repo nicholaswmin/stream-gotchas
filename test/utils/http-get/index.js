@@ -24,6 +24,8 @@ res.on('end', () => {
 import http from 'node:http'
 
 export default (app, url, opts) => new Promise((resolve, reject) => {
+  app.close()
+
   const host = 'localhost'
   const server = app.listen(0, host, () => {
     http.get(`http://${host}:${server.address().port}${url}`, {

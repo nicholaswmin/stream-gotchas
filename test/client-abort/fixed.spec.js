@@ -20,7 +20,7 @@ describe('client aborts request (fixed)', function() {
     this.server.close()
   })
 
-  describe('when we send one request', function() {
+  describe('when we send one request without aborting', function() {
     it('sends an HTTP 200 and a 20 MB response', async function () {
       const { stdout } = await request('localhost:5020/client-abort')
         .normal()
@@ -30,7 +30,7 @@ describe('client aborts request (fixed)', function() {
     })
   })
 
-  describe('when we send a lot of requests', function() {
+  describe('when we send a lot of aborted requests', function() {
     it('releases database connections back to the pool', async function () {
       await request('localhost:5020/client-abort/fixed')
         .thenAbort({ times: 10 })

@@ -20,7 +20,7 @@ describe('client aborts request', function() {
     this.server.close()
   })
 
-  describe('when we send one request', function() {
+  describe('when we send one request without aborting', function() {
     it('sends an HTTP 200 and a 20 MB response', async function () {
       const { stdout } = await request('localhost:5020/client-abort')
         .normal()
@@ -30,44 +30,41 @@ describe('client aborts request', function() {
     })
   })
 
-  describe('when we send a lot of requests', function() {
+  describe('when we send a lot of aborted requests', function() {
+    it('does not release database connections', async function () {
+      await request('localhost:5020/client-abort')
+        .thenAbort({ times: 10 })
 
-    describe('without handling request error aborted event', function() {
-      it('does not release database connections', async function () {
-        await request('localhost:5020/client-abort')
-          .thenAbort({ times: 10 })
+      await wait(500)
 
-        await wait(500)
+      this.db.client.pool.numUsed().should.be.above(8)
+    })
 
-        this.db.client.pool.numUsed().should.be.above(8)
+    it('exhibits memory spikes that persist after request', async function () {
+      this.memstat = new Memstat({
+        drawPlot: !!process.env['npm_config_plot_gc']
       })
 
-      it('exhibits memory spikes that persist after request', async function () {
-        this.memstat = new Memstat({
-          drawPlot: !!process.env['npm_config_plot_gc']
-        })
+      this.memstat.start()
 
-        this.memstat.start()
+      await request('localhost:5020/client-abort')
+        .thenAbort({ times: 10 })
 
-        await request('localhost:5020/client-abort')
-          .thenAbort({ times: 10 })
+      const mem = await this.memstat.stop()
 
-        const mem = await this.memstat.stop()
+      mem.leaks.should.be.true
+    })
 
-        mem.leaks.should.be.true
-      })
+    it('has queries still pending', async function () {
+      const rand = Math.random()
 
-      it('has queries still pending', async function () {
-        const rand = Math.random()
+      await request(`localhost:5020/client-abort?comment=${rand}`)
+        .thenAbort({ times: 10, afterMs: 500 })
 
-        await request(`localhost:5020/client-abort?comment=${rand}`)
-          .thenAbort({ times: 10, afterMs: 500 })
-
-        return this.db.raw(`SELECT * FROM pg_stat_activity;`)
-          .then(res => res.rows
-            .filter(row => row.query.includes(`/* ${rand} */`)))
-            .then(res => res.should.have.length.above(0))
-      })
+      return this.db.raw(`SELECT * FROM pg_stat_activity;`)
+        .then(res => res.rows
+          .filter(row => row.query.includes(`/* ${rand} */`)))
+          .then(res => res.should.have.length.above(0))
     })
   })
 })

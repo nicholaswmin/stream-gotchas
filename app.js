@@ -50,7 +50,7 @@ app.get('/uncompressed', async (req, res, next) => {
   }
 })
 
-app.get('/gzipped', async (req, res, next) => {
+app.get('/compressed', async (req, res, next) => {
   try {
     const stream = db('messages').select('*').stream()
     const jsonStream = stream.pipe(JSONStream.stringify())
